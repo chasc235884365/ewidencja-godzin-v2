@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ewidencja godzin pracy</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<meta name="theme-color" content="#1B2430">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ewidencja">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430;--ink-soft:#2C3746;--paper:#FAFAF7;--paper-dim:#F1EFE8;
+    --line:#DCD6C8;--teal:#2F6E6E;--teal-dark:#1F4C4C;--amber:#C9942A;--amber-dark:#8F6A17;
+    --red:#B3413A;--muted:#767065;--radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
+  .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 6px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;}
+  .subtitle{color:#B9C2C9;font-size:13.5px;margin-top:6px;max-width:480px;}
+  .card{background:var(--paper);color:var(--ink);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 0 rgba(0,0,0,.25);}
+  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
+  .card h2 .n{font-family:'IBM Plex Mono',monospace;color:var(--teal);font-size:12px;border:1px solid var(--teal);border-radius:4px;padding:1px 6px;}
+  .grid{display:grid;gap:12px;}
+  .grid.settings{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  .grid.entry{grid-template-columns:1.1fr .8fr .8fr .8fr 1.4fr auto;align-items:end;}
+  label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],input[type=tel],select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .checkbox-row input{width:auto;}
+  button{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;border:none;border-radius:7px;padding:10px 16px;cursor:pointer;transition:transform .08s ease,opacity .15s ease;}
+  button:active{transform:scale(.97);}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--paper-dim);}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);padding:5px 10px;font-size:11.5px;}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .btn-block{width:100%;}
+  table{width:100%;min-width:640px;border-collapse:collapse;font-size:13px;}
+  #tableWrap,#adminTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .scroll-hint{display:none;font-size:11px;color:var(--muted);margin:-6px 0 8px;}
+  @media (max-width:680px){.scroll-hint{display:block;}}
+  thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 8px;}
+  tbody td{padding:10px 8px;border-bottom:1px solid var(--paper-dim);vertical-align:middle;}
+  tbody tr:hover{background:var(--paper-dim);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--paper-dim);color:var(--muted);}
+  .tag.holiday{background:#F4E3D0;color:var(--amber-dark);}
+  .hourbar{position:relative;width:100%;height:14px;background:var(--paper-dim);border-radius:4px;overflow:hidden;min-width:90px;}
+  .hourbar .seg{position:absolute;top:0;bottom:0;}
+  .hourbar .reg{background:var(--teal);}
+  .hourbar .ot{background:var(--amber);}
+  .empty{color:var(--muted);font-size:13px;padding:22px 4px;text-align:center;}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+  .stat{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper-dim);}
+  .stat .label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
+  .stat .value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;margin-top:4px;color:var(--ink);}
+  .stat.pay .value{color:var(--teal-dark);}
+  .stat.ot .value{color:var(--amber-dark);}
+  .month-bar{display:flex;height:22px;border-radius:5px;overflow:hidden;margin-top:14px;border:1px solid var(--line);}
+  .month-bar .seg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .month-select{display:flex;align-items:center;gap:8px;}
+  .month-select select{width:auto;min-width:150px;}
+  .note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .footer-note{color:#7C858E;font-size:11.5px;text-align:center;margin-top:24px;}
+
+  /* start screen */
+  .start-actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .start-actions button{flex:1;min-width:170px;}
+  .person-list{display:flex;flex-direction:column;gap:8px;}
+  .person-card{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;
+  }
+  .person-card:hover{border-color:var(--teal);}
+  .person-card .pname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px;}
+  .lock-icon{font-size:13px;color:var(--muted);}
+  .person-actions{display:flex;gap:6px;align-items:center;}
+  .icon-btn{background:transparent;border:none;color:var(--muted);font-size:15px;padding:4px 6px;cursor:pointer;}
+  .icon-btn:hover{color:var(--red);}
+
+  /* back button */
+  .back-btn{background:transparent;color:var(--paper);border:1px solid #3C4757;padding:8px 14px;margin-bottom:14px;}
+  .back-btn:hover{background:#242E3B;}
+
+  /* locked summary overlay */
+  .locked-wrap{position:relative;}
+  .lock-overlay{
+    position:absolute;inset:0;background:rgba(250,250,247,.86);backdrop-filter:blur(3px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    border-radius:8px;text-align:center;padding:20px;
+  }
+  .lock-overlay .lock-emoji{font-size:26px;}
+  .lock-overlay p{margin:0;font-size:13px;color:var(--ink-soft);max-width:260px;}
+
+  /* modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(10,14,20,.65);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:50;
+  }
+  .modal-box{background:var(--paper);color:var(--ink);border-radius:var(--radius);padding:24px;max-width:400px;width:100%;max-height:88vh;overflow-y:auto;}
+  .modal-box h3{font-family:'Space Grotesk',sans-serif;margin:0 0 14px;font-size:17px;}
+  .modal-box .field{margin-bottom:12px;}
+  .pin-display{display:flex;gap:10px;justify-content:center;margin:16px 0;}
+  .pin-display input{
+    width:48px;height:56px;text-align:center;font-size:22px;letter-spacing:0;
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .modal-actions button{flex:1;}
+  .modal-error{color:var(--red);font-size:12.5px;margin-top:8px;display:none;}
+  .link-btn{background:none;border:none;color:var(--teal-dark);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:6px 0;}
+
+  @media (max-width:720px){
+    .grid.entry{grid-template-columns:1fr 1fr;}
+    .grid.entry > *:last-child{grid-column:span 2;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+
+  <div id="screen-loading" style="text-align:center;padding:80px 20px;">
+    <p class="brand-eyebrow">Łączenie</p>
+    <h1>Ewidencja godzin</h1>
+    <p class="subtitle" style="margin:14px auto;">Łączenie z bazą danych w chmurze…</p>
+  </div>
+
+  <!-- ============ START SCREEN ============ -->
+  <div id="screen-start" style="display:none;">
+    <header>
+      <div>
+        <p class="brand-eyebrow">Panel główny</p>
+        <h1>Ewidencja godzin</h1>
+        <p class="subtitle">Wybierz siebie z listy albo dodaj nową osobę.</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2><span class="n">§0</span> Dodaj</h2>
+      <div class="start-actions">
+        <button class="btn-primary" id="addAdminBtn" onclick="openAddPersonModal('admin')">+ Dodaj administratora</button>
+        <button class="btn-primary" onclick="openAddPersonModal('user')">+ Dodaj użytkownika</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">A</span> Administratorzy</h2>
+      <div class="person-list" id="adminList"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">U</span> Użytkownicy</h2>
+      <div class="person-list" id="userList"></div>
+    </div>
+
+    <p class="footer-note">Dane zapisują się automatycznie w pamięci tej przeglądarki (localStorage).</p>
+  </div>
+
+  <!-- ============ USER TIMESHEET SCREEN ============ -->
+  <div id="screen-timesheet" style="display:none;">
+    <button class="back-btn" id="tsBackBtn">← Wróć</button>
+    <header>
+      <div>
+        <p class="brand-eyebrow" id="tsEyebrow">Karta czasu pracy</p>
+        <h1 id="tsTitle">Użytkownik</h1>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2><span class="n">§1</span> Ustawienia umowy</h2>
+      <div class="grid settings">
+        <div><label for="contractType">Typ umowy</label>
+          <select id="contractType"><option value="etat">Umowa o pracę (etat)</option><option value="inne">Zlecenie / dzieło / B2B</option></select>
+        </div>
+        <div><label for="rate">Stawka (zł/h)</label><input type="number" id="rate" step="0.01" min="0"></div>
+        <div id="thresholdWrap"><label for="threshold">Próg dobowy (h)</label><input type="number" id="threshold" step="0.5" min="1"></div>
+        <div id="otMultWrap"><label for="otMult">Mnożnik nadgodzin</label><input type="number" id="otMult" step="0.05" min="1"></div>
+        <div id="holMultWrap"><label for="holMult">Mnożnik niedziela/święto</label><input type="number" id="holMult" step="0.05" min="1"></div>
+      </div>
+      <p class="note">Wyliczenia nadgodzin są uproszczone (próg dobowy) i mają charakter orientacyjny.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">§2</span> Dodaj wpis</h2>
+      <div class="grid entry">
+        <div><label for="eDate">Data</label><input type="date" id="eDate"></div>
+        <div><label for="eFrom">Od</label><input type="time" id="eFrom"></div>
+        <div><label for="eTo">Do</label><input type="time" id="eTo"></div>
+        <div><label for="eBreak">Przerwa (min)</label><input type="number" id="eBreak" min="0" step="5" value="0"></div>
+        <div><label for="eNote">Notatka</label><input type="text" id="eNote" placeholder="opcjonalnie"></div>
+        <div><button class="btn-primary btn-block" id="addBtn">Dodaj wpis</button></div>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="eHoliday">
+        <label for="eHoliday" style="margin:0;text-transform:none;font-weight:400;">To dzień wolny / niedziela / święto (wyższa stawka)</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;"><span class="n">§3</span> Wpisy</h2>
+        <div class="month-select">
+          <label style="margin:0;" for="monthFilter">Miesiąc</label>
+          <select id="monthFilter"></select>
+          <button class="btn-ghost" id="exportBtn">Eksport CSV</button>
+        </div>
+      </div>
+      <p class="scroll-hint">← przewiń tabelę w bok, żeby zobaczyć wszystkie kolumny →</p>
+      <div id="tableWrap"></div>
+    </div>
+
+    <div class="card locked-wrap">
+      <h2><span class="n">§4</span> Podsumowanie miesiąca</h2>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="month-bar" id="monthBar"></div>
+      <p class="note" id="summaryNote"></p>
+      <div class="lock-overlay" id="summaryLock">
+        <div class="lock-emoji">🔒</div>
+        <p>Podsumowanie i wypłata są chronione PIN-em.</p>
+        <button class="btn-primary" onclick="requestUnlockSummary()">Wpisz PIN, aby zobaczyć</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">§5</span> Kopia zapasowa</h2>
+      <p class="note" style="margin-top:0;">Kopia zapasowa danych tego użytkownika (wpisy + ustawienia).</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-ghost" id="backupExportBtn">Pobierz kopię (.json)</button>
+        <button class="btn-ghost" id="backupImportBtn">Wczytaj kopię (.json)</button>
+        <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN SCREEN ============ -->
+  <div id="screen-admin" style="display:none;">
+    <button class="back-btn" id="adminBackBtn">← Wróć</button>
+    <header>
+      <div>
+        <p class="brand-eyebrow">Panel administratora</p>
+        <h1 id="adminTitle">Administrator</h1>
+        <p class="subtitle">Podsumowanie godzin i wypłat wszystkich użytkowników.</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;"><span class="n">§A</span> Wszyscy użytkownicy</h2>
+        <div class="month-select">
+          <label style="margin:0;" for="adminMonthFilter">Miesiąc</label>
+          <select id="adminMonthFilter"></select>
+        </div>
+      </div>
+      <p class="scroll-hint">← przewiń tabelę w bok →</p>
+      <div id="adminTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL ============ -->
+  <div class="modal-overlay" id="modalOverlay" style="display:none;">
+    <div class="modal-box" id="modalBox"></div>
+  </div>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+/* ---------- storage / data model ---------- */
+let appData = { admins: [], users: [] };
+let currentUserId = null;
+let currentAdminId = null;
+let summaryUnlocked = false;
+let viewingAsAdmin = false;
+let currentTsMonth = null;
+let currentAdminMonth = null;
+
+function simpleHash(str){
+  let hash = 5381;
+  for(let i=0;i<str.length;i++){ hash = ((hash<<5)+hash) + str.charCodeAt(i); hash = hash & 0xFFFFFFFF; }
+  return (hash>>>0).toString(36);
+}
+function normAnswer(s){ return (s||'').trim().toLowerCase(); }
+
+/* ---------- Firebase setup ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyChw4HMNtmL9-bwH-3CqMyJB6KHiUvRqTo",
+  authDomain: "ewidencja-godzin-e03dd.firebaseapp.com",
+  projectId: "ewidencja-godzin-e03dd",
+  storageBucket: "ewidencja-godzin-e03dd.firebasestorage.app",
+  messagingSenderId: "1034276533131",
+  appId: "1:1034276533131:web:bdbdf153b282d946f8358e"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const appDocRef = db.collection('app').doc('data');
+let firstSnapshotHandled = false;
+
+function loadAppData(){
+  appDocRef.onSnapshot((doc)=>{
+    if(doc.exists){
+      appData = doc.data();
+      if(!appData.admins) appData.admins = [];
+      if(!appData.users) appData.users = [];
+    } else {
+      appData = { admins: [], users: [] };
+    }
+    if(!firstSnapshotHandled){
+      firstSnapshotHandled = true;
+      maybeMigrateOldData();
+      $('screen-loading').style.display = 'none';
+      $('screen-start').style.display = 'block';
+      renderStart();
+    } else {
+      refreshCurrentScreen();
+    }
+  }, (err)=>{
+    console.error(err);
+    $('screen-loading').innerHTML = '<p class="subtitle">Nie udało się połączyć z bazą danych w chmurze. Sprawdź połączenie z internetem i odśwież stronę.</p>';
+  });
+}
+function saveAppData(){
+  appDocRef.set(appData).catch((e)=>{
+    console.error(e);
+    alert('Błąd zapisu do chmury — sprawdź połączenie z internetem.');
+  });
+}
+function refreshCurrentScreen(){
+  if($('screen-start').style.display !== 'none') renderStart();
+  else if($('screen-timesheet').style.display !== 'none'){
+    if(!getUser(currentUserId)){ backToStart(); return; }
+    renderTimesheet();
+  }
+  else if($('screen-admin').style.display !== 'none') renderAdminScreen();
+}
+
+function defaultSettings(){
+  return { contractType:'etat', rate:30, threshold:8, otMult:1.5, holMult:2.0 };
+}
+
+/* ---------- migration from old single-user version ---------- */
+function maybeMigrateOldData(){
+  if(appData.users.length>0 || appData.admins.length>0) return;
+  const oldEntries = localStorage.getItem('ewidencja_entries');
+  const oldSettings = localStorage.getItem('ewidencja_settings');
+  if(!oldEntries) return;
+  let entries = [], settings = defaultSettings();
+  try{ entries = JSON.parse(oldEntries) || []; }catch(e){}
+  try{ if(oldSettings) settings = JSON.parse(oldSettings); }catch(e){}
+  if(entries.length===0) return;
+  openMigrationModal(entries, settings);
+}
+
+function openMigrationModal(entries, settings){
+  $('modalBox').innerHTML = `
+    <h3>Znaleziono dane z poprzedniej wersji</h3>
+    <p class="note" style="margin-top:0;">Wykryto ${entries.length} istniejących wpisów godzin (${escapeHtml(settings.workerName||'')}). Przenieś je na nowe konto użytkownika, żeby ich nie stracić.</p>
+    <div class="field"><label>Imię użytkownika</label><input type="text" id="migName" value="${escapeHtml(settings.workerName||'Użytkownik')}"></div>
+    <div class="field"><label>Ustaw 4-cyfrowy PIN</label>
+      <div class="pin-display">
+        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+      </div>
+    </div>
+    <div class="field"><label>Pytanie pomocnicze (na wypadek zapomnienia PIN)</label><input type="text" id="migQ" placeholder="np. Jaki jest twój ulubiony kolor?"></div>
+    <div class="field"><label>Odpowiedź</label><input type="text" id="migA"></div>
+    <p class="modal-error" id="migErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="skipMigration()">Pomiń</button>
+      <button class="btn-primary" onclick="confirmMigration()">Przenieś dane</button>
+    </div>
+  `;
+  window._migEntries = entries; window._migSettings = settings;
+  setupPinAutoAdvance();
+  showModal();
+}
+function skipMigration(){ closeModal(); }
+function confirmMigration(){
+  const name = $('migName').value.trim();
+  const pin = getPinValue();
+  const q = $('migQ').value.trim();
+  const a = $('migA').value.trim();
+  if(!name || pin.length!==4 || !q || !a){
+    $('migErr').textContent = 'Uzupełnij wszystkie pola (PIN musi mieć 4 cyfry).';
+    $('migErr').style.display='block';
+    return;
+  }
+  const s = window._migSettings;
+  appData.users.push({
+    id: Date.now(),
+    name,
+    pinHash: simpleHash(pin),
+    question: q,
+    answerHash: simpleHash(normAnswer(a)),
+    settings: { contractType: s.contractType||'etat', rate: s.rate||30, threshold: s.threshold||8, otMult: s.otMult||1.5, holMult: s.holMult||2.0 },
+    entries: window._migEntries
+  });
+  saveAppData();
+  closeModal();
+  renderStart();
+}
+
+/* ---------- modal helpers ---------- */
+function showModal(){ $('modalOverlay').style.display='flex'; }
+function closeModal(){ $('modalOverlay').style.display='none'; $('modalBox').innerHTML=''; }
+function setupPinAutoAdvance(container){
+  const scope = container || document;
+  const inputs = scope.querySelectorAll('.pin-d');
+  inputs.forEach((inp,idx)=>{
+    inp.addEventListener('input', ()=>{
+      inp.value = inp.value.replace(/[^0-9]/g,'').slice(0,1);
+      if(inp.value && inputs[idx+1]) inputs[idx+1].focus();
+    });
+    inp.addEventListener('keydown', (e)=>{
+      if(e.key==='Backspace' && !inp.value && inputs[idx-1]) inputs[idx-1].focus();
+    });
+  });
+  if(inputs[0]) inputs[0].focus();
+}
+function getPinValue(container){
+  const scope = container || document;
+  return Array.from(scope.querySelectorAll('.pin-d')).map(i=>i.value).join('');
+}
+
+/* ---------- add admin/user ---------- */
+function openAddPersonModal(type){
+  if(type==='admin' && appData.admins.length >= 1){
+    alert('Można mieć tylko jedno konto administratora. Usuń istniejące, jeśli chcesz dodać inne.');
+    return;
+  }
+  const label = type==='admin' ? 'administratora' : 'użytkownika';
+  $('modalBox').innerHTML = `
+    <h3>Dodaj ${label}</h3>
+    <div class="field"><label>Imię / etykieta</label><input type="text" id="npName" placeholder="np. Jan Kowalski"></div>
+    <div class="field"><label>Ustaw 4-cyfrowy PIN</label>
+      <div class="pin-display">
+        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+      </div>
+    </div>
+    <div class="field"><label>Pytanie pomocnicze (na wypadek zapomnienia PIN)</label><input type="text" id="npQ" placeholder="np. Jak nazywał się twój pierwszy pies?"></div>
+    <div class="field"><label>Odpowiedź</label><input type="text" id="npA"></div>
+    <p class="modal-error" id="npErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" onclick="confirmAddPerson('${type}')">Dodaj</button>
+    </div>
+  `;
+  setupPinAutoAdvance();
+  showModal();
+}
+function confirmAddPerson(type){
+  if(type==='admin' && appData.admins.length >= 1){
+    closeModal();
+    return;
+  }
+  const name = $('npName').value.trim();
+  const pin = getPinValue();
+  const q = $('npQ').value.trim();
+  const a = $('npA').value.trim();
+  if(!name || pin.length!==4 || !q || !a){
+    $('npErr').textContent = 'Uzupełnij wszystkie pola (PIN musi mieć 4 cyfry).';
+    $('npErr').style.display='block';
+    return;
+  }
+  const person = { id: Date.now(), name, pinHash: simpleHash(pin), question: q, answerHash: simpleHash(normAnswer(a)) };
+  if(type==='user'){ person.settings = defaultSettings(); person.entries = []; appData.users.push(person); }
+  else { appData.admins.push(person); }
+  saveAppData();
+  closeModal();
+  renderStart();
+}
+
+/* ---------- delete person ---------- */
+function deletePerson(type, id, ev){
+  ev.stopPropagation();
+  if(type==='admin'){
+    const admin = appData.admins.find(p=>p.id===id);
+    openAdminDeleteModal(admin);
+    return;
+  }
+  const user = appData.users.find(p=>p.id===id);
+  openUserDeleteModal(user);
+}
+
+function openUserDeleteModal(user){
+  $('modalBox').innerHTML = `
+    <h3>Usuń użytkownika — ${escapeHtml(user.name)}</h3>
+    <p class="note" style="margin-top:0;">To usunie użytkownika i wszystkie jego ${user.entries.length} wpis(ów) godzin bezpowrotnie.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-danger" onclick="confirmDeleteUser(${user.id})">Usuń użytkownika</button>
+    </div>
+  `;
+  showModal();
+}
+function confirmDeleteUser(id){
+  appData.users = appData.users.filter(p=>p.id!==id);
+  saveAppData();
+  closeModal();
+  renderStart();
+}
+
+function openAdminDeleteModal(admin){
+  $('modalBox').innerHTML = `
+    <h3>Usuń administratora — ${escapeHtml(admin.name)}</h3>
+    <p class="note" style="margin-top:0;">To usunie konto administratora bezpowrotnie. Potwierdź, wpisując PIN.</p>
+    <div class="pin-display">
+      <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+      <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+    </div>
+    <p class="modal-error" id="delErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-danger" onclick="confirmDeleteAdmin(${admin.id})">Usuń administratora</button>
+    </div>
+    <button class="link-btn" onclick="openForgotPinModal('admin', ${admin.id}, -1)">Zapomniałem PIN</button>
+  `;
+  setupPinAutoAdvance();
+  showModal();
+}
+function confirmDeleteAdmin(id){
+  const admin = appData.admins.find(p=>p.id===id);
+  const pin = getPinValue();
+  if(simpleHash(pin) !== admin.pinHash){
+    $('delErr').textContent = 'Niepoprawny PIN.';
+    $('delErr').style.display='block';
+    document.querySelectorAll('.pin-d').forEach(i=>i.value='');
+    document.querySelector('.pin-d').focus();
+    return;
+  }
+  appData.admins = appData.admins.filter(p=>p.id!==id);
+  saveAppData();
+  closeModal();
+  renderStart();
+}
+
+/* ---------- PIN login modal (for admin entry, or unlocking summary) ---------- */
+function openPinLoginModal(person, onSuccess){
+  $('modalBox').innerHTML = `
+    <h3>Wpisz PIN — ${escapeHtml(person.name)}</h3>
+    <div class="pin-display">
+      <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+      <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+    </div>
+    <p class="modal-error" id="loginErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" id="loginSubmitBtn">Zatwierdź</button>
+    </div>
+    <button class="link-btn" onclick="openForgotPinModal('${person.__type}', ${person.id}, ${onSuccessRegistry(onSuccess)})">Zapomniałem PIN</button>
+  `;
+  setupPinAutoAdvance();
+  const submit = ()=>{
+    const pin = getPinValue();
+    if(simpleHash(pin) === person.pinHash){ closeModal(); onSuccess(); }
+    else{
+      $('loginErr').textContent = 'Niepoprawny PIN. Spróbuj ponownie.';
+      $('loginErr').style.display='block';
+      document.querySelectorAll('.pin-d').forEach(i=>i.value='');
+      document.querySelector('.pin-d').focus();
+    }
+  };
+  $('loginSubmitBtn').addEventListener('click', submit);
+  document.querySelectorAll('.pin-d').forEach(inp=>{
+    inp.addEventListener('keydown',(e)=>{ if(e.key==='Enter') submit(); });
+  });
+  showModal();
+}
+// small registry so we can reference an onSuccess callback from inline onclick
+let _cbRegistry = {}; let _cbCounter = 0;
+function onSuccessRegistry(fn){ const id = _cbCounter++; _cbRegistry[id]=fn; return id; }
+
+function openForgotPinModal(type, id, cbId){
+  const list = type==='admin' ? appData.admins : appData.users;
+  const person = list.find(p=>p.id===id);
+  $('modalBox').innerHTML = `
+    <h3>Reset PIN — ${escapeHtml(person.name)}</h3>
+    <p class="note" style="margin-top:0;">${escapeHtml(person.question)}</p>
+    <div class="field"><label>Odpowiedź</label><input type="text" id="fpAnswer"></div>
+    <div class="field"><label>Nowy 4-cyfrowy PIN</label>
+      <div class="pin-display">
+        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+      </div>
+    </div>
+    <p class="modal-error" id="fpErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" onclick="confirmForgotPin('${type}', ${id}, ${cbId})">Ustaw nowy PIN</button>
+    </div>
+  `;
+  setupPinAutoAdvance();
+  showModal();
+}
+function confirmForgotPin(type, id, cbId){
+  const list = type==='admin' ? appData.admins : appData.users;
+  const person = list.find(p=>p.id===id);
+  const answer = $('fpAnswer').value.trim();
+  const pin = getPinValue();
+  if(simpleHash(normAnswer(answer)) !== person.answerHash){
+    $('fpErr').textContent = 'Odpowiedź nieprawidłowa.';
+    $('fpErr').style.display='block';
+    return;
+  }
+  if(pin.length!==4){
+    $('fpErr').textContent = 'Nowy PIN musi mieć 4 cyfry.';
+    $('fpErr').style.display='block';
+    return;
+  }
+  person.pinHash = simpleHash(pin);
+  saveAppData();
+  closeModal();
+  alert('PIN został zmieniony. Zaloguj się ponownie nowym PIN-em.');
+  const fn = _cbRegistry[cbId];
+  // reopen login so they can use new pin right away, or just return to start
+  renderStart();
+}
+
+/* ---------- navigation ---------- */
+function selectUser(userId){
+  currentUserId = userId;
+  summaryUnlocked = false;
+  viewingAsAdmin = false;
+  currentTsMonth = null;
+  $('screen-start').style.display='none';
+  $('screen-admin').style.display='none';
+  $('screen-timesheet').style.display='block';
+  $('tsBackBtn').textContent = '← Wróć do listy';
+  $('tsBackBtn').onclick = backToStart;
+  const user = getUser(userId);
+  $('tsTitle').textContent = user.name;
+  $('tsEyebrow').textContent = 'Karta czasu pracy';
+  loadUserIntoForm(user);
+  renderTimesheet(true);
+}
+function selectUserFromAdmin(userId){
+  currentUserId = userId;
+  summaryUnlocked = true; // admin already authenticated, sees everything
+  viewingAsAdmin = true;
+  currentTsMonth = null;
+  $('screen-admin').style.display='none';
+  $('screen-timesheet').style.display='block';
+  $('tsBackBtn').textContent = '← Wróć do panelu administratora';
+  $('tsBackBtn').onclick = ()=>{ $('screen-timesheet').style.display='none'; showAdminScreen(); };
+  const user = getUser(userId);
+  $('tsTitle').textContent = user.name + ' (podgląd administratora)';
+  $('tsEyebrow').textContent = 'Karta czasu pracy';
+  loadUserIntoForm(user);
+  renderTimesheet(true);
+}
+function backToStart(){
+  currentUserId = null; currentAdminId = null; summaryUnlocked = false; viewingAsAdmin = false;
+  $('screen-timesheet').style.display='none';
+  $('screen-admin').style.display='none';
+  $('screen-start').style.display='block';
+  renderStart();
+}
+function requestAdminLogin(adminId){
+  const admin = appData.admins.find(a=>a.id===adminId);
+  admin.__type = 'admin';
+  openPinLoginModal(admin, ()=>{ currentAdminId = adminId; showAdminScreen(); });
+}
+function requestUnlockSummary(){
+  const user = getUser(currentUserId);
+  user.__type = 'user';
+  openPinLoginModal(user, ()=>{ summaryUnlocked = true; renderSummary(); });
+}
+
+function getUser(id){ return appData.users.find(u=>u.id===id); }
+
+/* ---------- render start screen ---------- */
+function renderStart(){
+  const addAdminBtn = $('addAdminBtn');
+  if(appData.admins.length >= 1){
+    addAdminBtn.disabled = true;
+    addAdminBtn.textContent = 'Administrator już istnieje';
+    addAdminBtn.style.opacity = '0.5';
+    addAdminBtn.style.cursor = 'not-allowed';
+  } else {
+    addAdminBtn.disabled = false;
+    addAdminBtn.textContent = '+ Dodaj administratora';
+    addAdminBtn.style.opacity = '1';
+    addAdminBtn.style.cursor = 'pointer';
+  }
+  const aWrap = $('adminList'), uWrap = $('userList');
+  aWrap.innerHTML = appData.admins.length ? appData.admins.map(a=>`
+    <div class="person-card" onclick="requestAdminLogin(${a.id})">
+      <span class="pname">🔑 ${escapeHtml(a.name)}</span>
+      <span class="person-actions"><span class="lock-icon">chroniony PIN</span>
+        <button class="icon-btn" onclick="deletePerson('admin', ${a.id}, event)" title="Usuń">✕</button>
+      </span>
+    </div>`).join('') : '<div class="empty">Brak administratorów — dodaj pierwszego powyżej.</div>';
+
+  uWrap.innerHTML = appData.users.length ? appData.users.map(u=>`
+    <div class="person-card" onclick="selectUser(${u.id})">
+      <span class="pname">👤 ${escapeHtml(u.name)}</span>
+      <span class="person-actions"><span class="lock-icon">${u.entries.length} wpis(ów)</span>
+        <button class="icon-btn" onclick="deletePerson('user', ${u.id}, event)" title="Usuń">✕</button>
+      </span>
+    </div>`).join('') : '<div class="empty">Brak użytkowników — dodaj pierwszego powyżej.</div>';
+}
+
+/* ---------- timesheet logic (per user) ---------- */
+function loadUserIntoForm(user){
+  $('contractType').value = user.settings.contractType;
+  $('rate').value = user.settings.rate;
+  $('threshold').value = user.settings.threshold;
+  $('otMult').value = user.settings.otMult;
+  $('holMult').value = user.settings.holMult;
+  toggleContractFields();
+  $('eDate').value = todayStr();
+}
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+
+['contractType','rate','threshold','otMult','holMult'].forEach(id=>{
+  $(id).addEventListener('change', ()=>{
+    const user = getUser(currentUserId);
+    if(!user) return;
+    user.settings.contractType = $('contractType').value;
+    user.settings.rate = parseFloat($('rate').value)||0;
+    user.settings.threshold = parseFloat($('threshold').value)||8;
+    user.settings.otMult = parseFloat($('otMult').value)||1.5;
+    user.settings.holMult = parseFloat($('holMult').value)||2.0;
+    toggleContractFields();
+    saveAppData();
+    renderTimesheet();
+  });
+});
+function toggleContractFields(){
+  const isEtat = $('contractType').value === 'etat';
+  $('thresholdWrap').style.display = isEtat ? '' : 'none';
+  $('otMultWrap').style.display = isEtat ? '' : 'none';
+}
+
+function timeToMinutes(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
+function computeWorkedHours(from,to,breakMin){
+  let start = timeToMinutes(from), end = timeToMinutes(to);
+  if(end <= start) end += 24*60;
+  return Math.max(0, (end - start - (breakMin||0)) / 60);
+}
+function computeEntry(entry, settings){
+  const worked = computeWorkedHours(entry.from, entry.to, entry.brk);
+  let regular = worked, overtime = 0;
+  if(settings.contractType === 'etat' && !entry.holiday){
+    regular = Math.min(worked, settings.threshold);
+    overtime = Math.max(0, worked - settings.threshold);
+  } else if(entry.holiday){
+    regular = 0; overtime = worked;
+  }
+  const rate = settings.rate || 0;
+  const otRateMult = entry.holiday ? settings.holMult : settings.otMult;
+  const pay = regular*rate + overtime*rate*otRateMult;
+  return { worked, regular, overtime, pay };
+}
+function addOneDay(dateStr){
+  let [y,m,d] = dateStr.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  d += 1;
+  if(d > daysInMonth){ d = 1; m += 1; }
+  if(m > 12){ m = 1; y += 1; }
+  return `${y}-${pad(m)}-${pad(d)}`;
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function monthKey(dateStr){ return dateStr.slice(0,7); }
+function monthLabel(key){
+  const [y,m] = key.split('-');
+  const names = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+  return `${names[parseInt(m)-1]} ${y}`;
+}
+
+$('addBtn').addEventListener('click', ()=>{
+  const user = getUser(currentUserId);
+  const date = $('eDate').value, from = $('eFrom').value, to = $('eTo').value;
+  const brk = parseInt($('eBreak').value)||0, note = $('eNote').value.trim(), holiday = $('eHoliday').checked;
+  if(!date || !from || !to){ alert('Uzupełnij datę oraz godziny od / do.'); return; }
+  user.entries.push({ id: Date.now(), date, from, to, brk, note, holiday });
+  user.entries.sort((a,b)=> a.date.localeCompare(b.date) || a.from.localeCompare(b.from));
+  $('eNote').value=''; $('eHoliday').checked=false;
+  saveAppData();
+  $('eDate').value = addOneDay(date);
+  renderTimesheet();
+});
+function deleteEntry(id){
+  const user = getUser(currentUserId);
+  user.entries = user.entries.filter(e=>e.id!==id);
+  saveAppData();
+  renderTimesheet();
+}
+window.deleteEntry = deleteEntry;
+
+function populateMonthFilter(preferLatest){
+  const user = getUser(currentUserId);
+  const months = Array.from(new Set(user.entries.map(e=>monthKey(e.date)))).sort();
+  const sel = $('monthFilter');
+  const prev = currentTsMonth;
+  sel.innerHTML = '';
+  if(months.length===0){ sel.innerHTML = '<option value="">brak wpisów</option>'; currentTsMonth = null; return; }
+  months.forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=monthLabel(m); sel.appendChild(opt); });
+  if(preferLatest) currentTsMonth = months[months.length-1];
+  else if(prev && months.includes(prev)) currentTsMonth = prev;
+  else currentTsMonth = months[months.length-1];
+  sel.value = currentTsMonth;
+}
+$('monthFilter').addEventListener('change', ()=>{ currentTsMonth = $('monthFilter').value; renderTimesheet(); });
+
+function renderEntryTable(){
+  const user = getUser(currentUserId);
+  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
+  const wrap = $('tableWrap');
+  if(rows.length===0){ wrap.innerHTML = '<div class="empty">Brak wpisów w tym miesiącu.</div>'; return; }
+  const maxHours = Math.max(...rows.map(r=>computeEntry(r,user.settings).worked), 10);
+  let html = `<table><thead><tr><th>Data</th><th>Godziny</th><th>Przerwa</th><th>Rozkład</th><th>Suma h</th><th>Kwota</th><th></th></tr></thead><tbody>`;
+  rows.forEach(e=>{
+    const c = computeEntry(e, user.settings);
+    const regW = (c.regular/maxHours*100).toFixed(1), otW = (c.overtime/maxHours*100).toFixed(1);
+    html += `<tr>
+      <td class="mono">${e.date}${e.holiday?' <span class="tag holiday">wolne/święto</span>':''}${e.note?`<br><span style="color:var(--muted);font-size:11.5px;">${escapeHtml(e.note)}</span>`:''}</td>
+      <td class="mono">${e.from}–${e.to}</td>
+      <td class="mono">${e.brk} min</td>
+      <td><div class="hourbar"><div class="seg reg" style="left:0;width:${regW}%;"></div><div class="seg ot" style="left:${regW}%;width:${otW}%;"></div></div></td>
+      <td class="mono">${c.worked.toFixed(2)} h${c.overtime>0?`<br><span class="tag" style="color:var(--amber-dark);background:#F4E3D0;">+${c.overtime.toFixed(2)} nadg.</span>`:''}</td>
+      <td class="mono">${c.pay.toFixed(2)} zł</td>
+      <td><button class="btn-danger" onclick="deleteEntry(${e.id})">Usuń</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderSummary(){
+  const user = getUser(currentUserId);
+  const lockEl = $('summaryLock');
+  if(!summaryUnlocked){ lockEl.style.display='flex'; $('summaryGrid').innerHTML=''; $('monthBar').innerHTML=''; $('summaryNote').textContent=''; return; }
+  lockEl.style.display='none';
+  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
+  let totalWorked=0, totalRegular=0, totalOvertime=0, totalPay=0;
+  rows.forEach(e=>{ const c = computeEntry(e,user.settings); totalWorked+=c.worked; totalRegular+=c.regular; totalOvertime+=c.overtime; totalPay+=c.pay; });
+  const days = new Set(rows.map(r=>r.date)).size;
+  const avg = days ? (totalWorked/days) : 0;
+  $('summaryGrid').innerHTML = `
+    <div class="stat"><div class="label">Dni przepracowane</div><div class="value">${days}</div></div>
+    <div class="stat"><div class="label">Godziny łącznie</div><div class="value">${totalWorked.toFixed(2)} h</div></div>
+    <div class="stat"><div class="label">Godziny standardowe</div><div class="value">${totalRegular.toFixed(2)} h</div></div>
+    <div class="stat ot"><div class="label">Nadgodziny</div><div class="value">${totalOvertime.toFixed(2)} h</div></div>
+    <div class="stat"><div class="label">Śr. dzienna</div><div class="value">${avg.toFixed(2)} h</div></div>
+    <div class="stat pay"><div class="label">Wypłata brutto</div><div class="value">${totalPay.toFixed(2)} zł</div></div>
+  `;
+  const regShare = totalWorked ? (totalRegular/totalWorked*100) : 0, otShare = totalWorked ? (totalOvertime/totalWorked*100) : 0;
+  $('monthBar').innerHTML = totalWorked ? `<div class="seg" style="width:${regShare}%;background:var(--teal);">${regShare>12?'standard':''}</div><div class="seg" style="width:${otShare}%;background:var(--amber);">${otShare>10?'nadg.':''}</div>` : '';
+  $('summaryNote').textContent = user.settings.contractType==='etat'
+    ? `Umowa o pracę · próg dobowy ${user.settings.threshold} h · nadgodziny ×${user.settings.otMult}, dni wolne/święta ×${user.settings.holMult}.`
+    : `Zlecenie / dzieło / B2B · brak naliczania nadgodzin, liczona jest suma godzin × stawka.`;
+}
+
+function renderTimesheet(preferLatest){
+  populateMonthFilter(!!preferLatest);
+  renderEntryTable();
+  renderSummary();
+}
+
+function toCSV(){
+  const user = getUser(currentUserId);
+  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
+  let csv = 'Data;Od;Do;Przerwa (min);Godziny;Standardowe;Nadgodziny;Kwota;Wolne/Swieto;Notatka\n';
+  rows.forEach(e=>{
+    const c = computeEntry(e, user.settings);
+    csv += [e.date,e.from,e.to,e.brk,c.worked.toFixed(2),c.regular.toFixed(2),c.overtime.toFixed(2),c.pay.toFixed(2),e.holiday?'tak':'nie',(e.note||'').replace(/;/g,',')].join(';') + '\n';
+  });
+  return csv;
+}
+$('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([toCSV()], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`ewidencja_${getUser(currentUserId).name}_${currentTsMonth||'wszystkie'}.csv`; a.click();
+  URL.revokeObjectURL(url);
+});
+$('backupExportBtn').addEventListener('click', ()=>{
+  const user = getUser(currentUserId);
+  const backup = { name:user.name, settings:user.settings, entries:user.entries, exportedAt:new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`kopia_${user.name}_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+});
+$('backupImportBtn').addEventListener('click', ()=> $('backupFileInput').click());
+$('backupFileInput').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      window._pendingImport = data;
+      $('modalBox').innerHTML = `
+        <h3>Wczytać kopię zapasową?</h3>
+        <p class="note" style="margin-top:0;">To nadpisze obecne dane tego użytkownika (${data.entries ? data.entries.length : 0} wpisów w kopii).</p>
+        <div class="modal-actions">
+          <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+          <button class="btn-danger" onclick="confirmImportBackup()">Wczytaj i nadpisz</button>
+        </div>
+      `;
+      showModal();
+    }catch(err){ alert('Nie udało się wczytać pliku.'); }
+  };
+  reader.readAsText(file); ev.target.value='';
+});
+function confirmImportBackup(){
+  const data = window._pendingImport;
+  const user = getUser(currentUserId);
+  if(data.settings) user.settings = data.settings;
+  if(data.entries) user.entries = data.entries;
+  saveAppData();
+  loadUserIntoForm(user);
+  renderTimesheet(true);
+  closeModal();
+  alert('Kopia wczytana pomyślnie.');
+}
+
+/* ---------- admin dashboard ---------- */
+function showAdminScreen(){
+  $('screen-start').style.display='none';
+  $('screen-timesheet').style.display='none';
+  $('screen-admin').style.display='block';
+  const admin = appData.admins.find(a=>a.id===currentAdminId);
+  $('adminTitle').textContent = admin ? admin.name : 'Administrator';
+  currentAdminMonth = null;
+  renderAdminScreen(true);
+}
+function allMonthsAcrossUsers(){
+  const set = new Set();
+  appData.users.forEach(u=> u.entries.forEach(e=> set.add(monthKey(e.date))));
+  return Array.from(set).sort();
+}
+function populateAdminMonthFilter(preferLatest){
+  const months = allMonthsAcrossUsers();
+  const sel = $('adminMonthFilter');
+  const prev = currentAdminMonth;
+  sel.innerHTML = '';
+  const allOpt = document.createElement('option'); allOpt.value=''; allOpt.textContent='Wszystkie miesiące'; sel.appendChild(allOpt);
+  months.forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=monthLabel(m); sel.appendChild(opt); });
+  if(preferLatest && months.length) currentAdminMonth = months[months.length-1];
+  else if(prev!==null && (prev==='' || months.includes(prev))) currentAdminMonth = prev;
+  else currentAdminMonth = months.length ? months[months.length-1] : '';
+  sel.value = currentAdminMonth;
+}
+$('adminMonthFilter').addEventListener('change', ()=>{ currentAdminMonth = $('adminMonthFilter').value; renderAdminScreen(); });
+
+function renderAdminScreen(preferLatest){
+  populateAdminMonthFilter(!!preferLatest);
+  const wrap = $('adminTableWrap');
+  if(appData.users.length===0){ wrap.innerHTML = '<div class="empty">Brak użytkowników w systemie.</div>'; return; }
+  let html = `<table><thead><tr><th>Użytkownik</th><th>Dni</th><th>Godziny</th><th>Nadgodziny</th><th>Wypłata</th><th></th><th></th></tr></thead><tbody>`;
+  appData.users.forEach(u=>{
+    const rows = u.entries.filter(e=> !currentAdminMonth || monthKey(e.date)===currentAdminMonth);
+    let worked=0, ot=0, pay=0;
+    rows.forEach(e=>{ const c = computeEntry(e,u.settings); worked+=c.worked; ot+=c.overtime; pay+=c.pay; });
+    const days = new Set(rows.map(r=>r.date)).size;
+    html += `<tr>
+      <td class="mono">${escapeHtml(u.name)}</td>
+      <td class="mono">${days}</td>
+      <td class="mono">${worked.toFixed(2)} h</td>
+      <td class="mono">${ot.toFixed(2)} h</td>
+      <td class="mono">${pay.toFixed(2)} zł</td>
+      <td><button class="btn-ghost" onclick="selectUserFromAdmin(${u.id})">Szczegóły</button></td>
+      <td><button class="btn-ghost" onclick="openAdminResetUserPin(${u.id})">Reset PIN</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+function openAdminResetUserPin(userId){
+  const user = getUser(userId);
+  $('modalBox').innerHTML = `
+    <h3>Reset PIN — ${escapeHtml(user.name)}</h3>
+    <p class="note" style="margin-top:0;">Jako administrator możesz ustawić nowy PIN bez podawania pytania pomocniczego.</p>
+    <div class="field"><label>Nowy 4-cyfrowy PIN</label>
+      <div class="pin-display">
+        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
+        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+      </div>
+    </div>
+    <p class="modal-error" id="arErr"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
+      <button class="btn-primary" onclick="confirmAdminResetUserPin(${userId})">Ustaw PIN</button>
+    </div>
+  `;
+  setupPinAutoAdvance();
+  showModal();
+}
+function confirmAdminResetUserPin(userId){
+  const pin = getPinValue();
+  if(pin.length!==4){ $('arErr').textContent='PIN musi mieć 4 cyfry.'; $('arErr').style.display='block'; return; }
+  const user = getUser(userId);
+  user.pinHash = simpleHash(pin);
+  saveAppData();
+  closeModal();
+  alert(`Nowy PIN dla ${user.name} został ustawiony.`);
+}
+
+/* ---------- init ---------- */
+$('adminBackBtn').addEventListener('click', backToStart);
+loadAppData();
+</script>
+</body>
+</html>
