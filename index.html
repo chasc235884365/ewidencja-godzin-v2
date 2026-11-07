@@ -2,1023 +2,931 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ewidencja godzin pracy</title>
+<meta name="theme-color" content="#CF4A2D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<meta name="theme-color" content="#1B2430">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Ewidencja">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#1B2430;--ink-soft:#2C3746;--paper:#FAFAF7;--paper-dim:#F1EFE8;
-    --line:#DCD6C8;--teal:#2F6E6E;--teal-dark:#1F4C4C;--amber:#C9942A;--amber-dark:#8F6A17;
-    --red:#B3413A;--muted:#767065;--radius:10px;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--ink);color:var(--paper);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
-  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px;}
-  header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
-  .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 6px;}
-  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;}
-  .subtitle{color:#B9C2C9;font-size:13.5px;margin-top:6px;max-width:480px;}
-  .card{background:var(--paper);color:var(--ink);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 0 rgba(0,0,0,.25);}
-  .card h2{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
-  .card h2 .n{font-family:'IBM Plex Mono',monospace;color:var(--teal);font-size:12px;border:1px solid var(--teal);border-radius:4px;padding:1px 6px;}
-  .grid{display:grid;gap:12px;}
-  .grid.settings{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
-  .grid.entry{grid-template-columns:1.1fr .8fr .8fr .8fr 1.4fr auto;align-items:end;}
-  label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
-  input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],input[type=tel],select{
-    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;
-    font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink);
-  }
-  input:focus,select:focus{outline:2px solid var(--teal);outline-offset:1px;}
-  .checkbox-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
-  .checkbox-row input{width:auto;}
-  button{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;border:none;border-radius:7px;padding:10px 16px;cursor:pointer;transition:transform .08s ease,opacity .15s ease;}
-  button:active{transform:scale(.97);}
-  .btn-primary{background:var(--teal);color:#fff;}
-  .btn-primary:hover{background:var(--teal-dark);}
-  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
-  .btn-ghost:hover{background:var(--paper-dim);}
-  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);padding:5px 10px;font-size:11.5px;}
-  .btn-danger:hover{background:var(--red);color:#fff;}
-  .btn-block{width:100%;}
-  table{width:100%;min-width:640px;border-collapse:collapse;font-size:13px;}
-  #tableWrap,#adminTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .scroll-hint{display:none;font-size:11px;color:var(--muted);margin:-6px 0 8px;}
-  @media (max-width:680px){.scroll-hint{display:block;}}
-  thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 8px;}
-  tbody td{padding:10px 8px;border-bottom:1px solid var(--paper-dim);vertical-align:middle;}
-  tbody tr:hover{background:var(--paper-dim);}
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 6px;border-radius:4px;background:var(--paper-dim);color:var(--muted);}
-  .tag.holiday{background:#F4E3D0;color:var(--amber-dark);}
-  .hourbar{position:relative;width:100%;height:14px;background:var(--paper-dim);border-radius:4px;overflow:hidden;min-width:90px;}
-  .hourbar .seg{position:absolute;top:0;bottom:0;}
-  .hourbar .reg{background:var(--teal);}
-  .hourbar .ot{background:var(--amber);}
-  .empty{color:var(--muted);font-size:13px;padding:22px 4px;text-align:center;}
-  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
-  .stat{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper-dim);}
-  .stat .label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
-  .stat .value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;margin-top:4px;color:var(--ink);}
-  .stat.pay .value{color:var(--teal-dark);}
-  .stat.ot .value{color:var(--amber-dark);}
-  .month-bar{display:flex;height:22px;border-radius:5px;overflow:hidden;margin-top:14px;border:1px solid var(--line);}
-  .month-bar .seg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#fff;}
-  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
-  .month-select{display:flex;align-items:center;gap:8px;}
-  .month-select select{width:auto;min-width:150px;}
-  .note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
-  .footer-note{color:#7C858E;font-size:11.5px;text-align:center;margin-top:24px;}
+:root{
+  color-scheme:light dark;
+  --font:'DM Sans',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --bg:#FBF3E4;--surface:#FFFDF8;--surface2:#F8EFDD;--line:#E9DCC2;--ink:#2E2118;--muted:#7B6B5A;
+  --tomato:#CF4A2D;--tomato-d:#A93A22;--on-tomato:#FFFFFF;--tomato-soft:#FADCD3;
+  --leaf:#3F7D3B;--leaf-soft:#E0EFD6;
+  --mustard:#E4A11B;--mustard-d:#835600;--mustard-soft:#FBEBC3;
+  --crust:#3A281C;--crust-ink:#FBF3E4;--crust-muted:#D6BFA0;
+  --red:#B3261E;--radius:18px;
+  --pattern:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22 viewBox=%220 0 220 220%22 fill=%22none%22 stroke=%22%238A6A45%22 stroke-opacity=%220.16%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E %3Ccircle cx=%2240%22 cy=%2240%22 r=%2215%22/%3E%3Ccircle cx=%2240%22 cy=%2240%22 r=%228%22/%3E%3Cpath d=%22M40 25v30M25 40h30%22/%3E %3Cpath d=%22M142 62C140 38 158 24 182 28 184 52 168 68 144 64z%22/%3E%3Cpath d=%22M146 62l28-26%22/%3E %3Cpath d=%22M30 170l50-20v20z%22/%3E%3Ccircle cx=%2252%22 cy=%22166%22 r=%222.4%22/%3E%3Ccircle cx=%2266%22 cy=%22160%22 r=%221.8%22/%3E %3Cpath d=%22M150 196v-22c-9-2-9-16 2-18 5-7 16-7 21 0 11 2 11 16 2 18v22z%22/%3E %3Ccircle cx=%22110%22 cy=%22110%22 r=%222%22/%3E%3Ccircle cx=%22196%22 cy=%22120%22 r=%222%22/%3E%3Ccircle cx=%2296%22 cy=%22200%22 r=%222%22/%3E%3Ccircle cx=%2214%22 cy=%22104%22 r=%222%22/%3E %3C/svg%3E");
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#1C1511;--surface:#271E18;--surface2:#2F251E;--line:#43362B;--ink:#F6EBDD;--muted:#B3A28F;
+  --tomato:#E8664A;--tomato-d:#F08A72;--on-tomato:#1C0E09;--tomato-soft:#4A2A21;
+  --leaf:#86C77E;--leaf-soft:#243A22;
+  --mustard:#F0B83E;--mustard-d:#F3C96A;--mustard-soft:#40321A;
+  --crust:#3A281C;--crust-ink:#FBF3E4;--crust-muted:#D6BFA0;
+  --red:#F2877F;--pattern:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22220%22 viewBox=%220 0 220 220%22 fill=%22none%22 stroke=%22%23F3DFC0%22 stroke-opacity=%220.07%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E %3Ccircle cx=%2240%22 cy=%2240%22 r=%2215%22/%3E%3Ccircle cx=%2240%22 cy=%2240%22 r=%228%22/%3E%3Cpath d=%22M40 25v30M25 40h30%22/%3E %3Cpath d=%22M142 62C140 38 158 24 182 28 184 52 168 68 144 64z%22/%3E%3Cpath d=%22M146 62l28-26%22/%3E %3Cpath d=%22M30 170l50-20v20z%22/%3E%3Ccircle cx=%2252%22 cy=%22166%22 r=%222.4%22/%3E%3Ccircle cx=%2266%22 cy=%22160%22 r=%221.8%22/%3E %3Cpath d=%22M150 196v-22c-9-2-9-16 2-18 5-7 16-7 21 0 11 2 11 16 2 18v22z%22/%3E %3Ccircle cx=%22110%22 cy=%22110%22 r=%222%22/%3E%3Ccircle cx=%22196%22 cy=%22120%22 r=%222%22/%3E%3Ccircle cx=%2296%22 cy=%22200%22 r=%222%22/%3E%3Ccircle cx=%2214%22 cy=%22104%22 r=%222%22/%3E %3C/svg%3E");
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg) var(--pattern) 0 0/220px 220px repeat;color:var(--ink);font:16px/1.5 var(--font);font-variant-numeric:tabular-nums;min-height:100vh}
+body::before{content:"";display:block;height:12px;background:repeating-conic-gradient(var(--tomato) 0 25%,var(--surface) 0 50%) 0 0/12px 12px}
+.wrap{max-width:940px;margin:0 auto;padding:26px 16px 72px}
+h1{font:700 clamp(28px,6vw,40px)/1.1 var(--display);margin:0;letter-spacing:-.01em}
+h2{font:600 19px/1.25 var(--display);margin:0 0 16px}
+.subtitle{margin:8px 0 0;color:var(--muted);max-width:520px}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
+.empty{margin:0;padding:26px 12px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px}
 
-  /* start screen */
-  .start-actions{display:flex;gap:12px;flex-wrap:wrap;}
-  .start-actions button{flex:1;min-width:170px;}
-  .person-list{display:flex;flex-direction:column;gap:8px;}
-  .person-card{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;
-  }
-  .person-card:hover{border-color:var(--teal);}
-  .person-card .pname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px;}
-  .lock-icon{font-size:13px;color:var(--muted);}
-  .person-actions{display:flex;gap:6px;align-items:center;}
-  .icon-btn{background:transparent;border:none;color:var(--muted);font-size:15px;padding:4px 6px;cursor:pointer;}
-  .icon-btn:hover{color:var(--red);}
+/* nagłówki ekranów */
+.brand-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+.hero-art{width:104px;height:104px;flex:none;padding:14px;border-radius:30px;background:var(--mustard-soft);transform:rotate(4deg)}
+.who-head{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.avatar{display:inline-grid;place-items:center;width:46px;height:46px;border-radius:15px;background:var(--av,var(--surface2));flex:none}
+.avatar svg{width:74%;height:74%}
+.avatar.lg{width:72px;height:72px;border-radius:22px}
+.avatar-btn{padding:0;min-height:0;border:0;background:none;border-radius:22px;cursor:pointer;flex:none}
+.avatar-btn:hover .avatar{box-shadow:0 0 0 3px var(--tomato-soft)}
 
-  /* back button */
-  .back-btn{background:transparent;color:var(--paper);border:1px solid #3C4757;padding:8px 14px;margin-bottom:14px;}
-  .back-btn:hover{background:#242E3B;}
+/* karty */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 0 rgba(58,40,28,.06)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.toolbar h2{margin:0}
+.month-select{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.month-select label{margin:0}
+.month-select select{width:auto;min-width:170px}
 
-  /* locked summary overlay */
-  .locked-wrap{position:relative;}
-  .lock-overlay{
-    position:absolute;inset:0;background:rgba(250,250,247,.86);backdrop-filter:blur(3px);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    border-radius:8px;text-align:center;padding:20px;
-  }
-  .lock-overlay .lock-emoji{font-size:26px;}
-  .lock-overlay p{margin:0;font-size:13px;color:var(--ink-soft);max-width:260px;}
+/* formularze */
+.grid{display:grid;gap:14px}
+.grid.settings{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.grid.entry{grid-template-columns:1.2fr .9fr .9fr .9fr 1.6fr auto;align-items:end}
+label{display:block;font-size:13.5px;font-weight:500;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],select{
+  width:100%;min-height:48px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--ink);font:inherit;font-size:16px}
+input:focus,select:focus{outline:none;border-color:var(--tomato);box-shadow:0 0 0 3px var(--tomato-soft)}
+button:focus-visible{outline:2px solid var(--tomato);outline-offset:2px}
+.checkbox-row{display:flex;align-items:center;gap:12px;min-height:48px;margin-top:10px;color:var(--ink)}
+.checkbox-row input{width:24px;height:24px;margin:0;accent-color:var(--tomato);flex:none}
+.checkbox-row label{margin:0;color:var(--ink);font-size:15px;font-weight:400}
+.preview{margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--leaf-soft);color:var(--leaf);font-weight:600;font-size:14.5px}
+.preview:empty{display:none}
+.form-error{color:var(--red);font-size:14px;margin:10px 0 0}
 
-  /* modal */
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(10,14,20,.65);display:flex;align-items:center;justify-content:center;
-    padding:20px;z-index:50;
-  }
-  .modal-box{background:var(--paper);color:var(--ink);border-radius:var(--radius);padding:24px;max-width:400px;width:100%;max-height:88vh;overflow-y:auto;}
-  .modal-box h3{font-family:'Space Grotesk',sans-serif;margin:0 0 14px;font-size:17px;}
-  .modal-box .field{margin-bottom:12px;}
-  .pin-display{display:flex;gap:10px;justify-content:center;margin:16px 0;}
-  .pin-display input{
-    width:48px;height:56px;text-align:center;font-size:22px;letter-spacing:0;
-  }
-  .modal-actions{display:flex;gap:10px;margin-top:16px;}
-  .modal-actions button{flex:1;}
-  .modal-error{color:var(--red);font-size:12.5px;margin-top:8px;display:none;}
-  .link-btn{background:none;border:none;color:var(--teal-dark);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:6px 0;}
+/* przyciski */
+button{font:600 15px var(--font);border:0;border-radius:12px;min-height:48px;padding:0 20px;cursor:pointer;transition:transform .08s,filter .15s,background .15s}
+button:active{transform:scale(.97)}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--tomato);color:var(--on-tomato)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-danger{background:transparent;color:var(--red);border:1.5px solid var(--line);min-height:44px;padding:0 14px;font-size:14px}
+.btn-danger:hover{background:var(--red);border-color:var(--red);color:#fff}
+.back-btn{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);min-height:44px;padding:0 16px;margin-bottom:18px;font-size:14px}
+.back-btn:hover{border-color:var(--tomato)}
+.link-btn{background:none;border:0;color:var(--tomato-d);font:500 14px var(--font);text-decoration:underline;min-height:44px;padding:0}
+.icon-btn{background:none;border:0;color:var(--muted);font-size:17px;min-width:44px;min-height:44px;padding:0}
+.icon-btn:hover{color:var(--red)}
+.start-actions{display:flex;gap:12px;flex-wrap:wrap}
+.start-actions button{flex:1 1 210px}
 
-  @media (max-width:720px){
-    .grid.entry{grid-template-columns:1fr 1fr;}
-    .grid.entry > *:last-child{grid-column:span 2;}
-  }
+/* osoby */
+.person-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.person-list .empty{grid-column:1/-1}
+.person-card{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:16px;background:var(--surface2);transition:transform .12s,border-color .12s,box-shadow .12s}
+.person-card:hover{border-color:var(--tomato);transform:translateY(-2px);box-shadow:0 6px 16px rgba(58,40,28,.1)}
+.person-main{flex:1;display:flex;align-items:center;gap:14px;min-width:0;min-height:68px;padding:10px 14px;background:none;border-radius:16px;color:inherit;text-align:left}
+.pname{font:600 17px var(--display)}
+.person-actions{display:flex;align-items:center;gap:4px;padding-right:6px}
+
+/* lista wpisów */
+.elist{display:flex;flex-direction:column;gap:10px}
+.erow{display:grid;grid-template-columns:60px 1fr auto auto auto;grid-template-areas:"date main dur pay del";gap:6px 18px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.e-date{grid-area:date;text-align:center;line-height:1.1}
+.e-date b{display:block;font:700 28px var(--display)}
+.e-date span{font-size:12px;color:var(--muted)}
+.e-main{grid-area:main;min-width:0}
+.e-time{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-weight:600}
+.e-time .muted{font-weight:400;font-size:13.5px}
+.e-note{font-size:13.5px;color:var(--muted);margin-top:4px}
+.e-dur{grid-area:dur;text-align:right}
+.e-dur b{display:block;font-weight:700}
+.e-dur span{font-size:13px;color:var(--muted)}
+.e-pay{grid-area:pay;min-width:100px;text-align:right;font-weight:700;color:var(--leaf)}
+.e-del{grid-area:del}
+.erow.total{background:var(--mustard-soft);border:1.5px dashed var(--mustard)}
+.hourbar{position:relative;height:8px;margin-top:9px;border-radius:999px;background:var(--line);overflow:hidden;max-width:460px}
+.hourbar .seg{position:absolute;top:0;bottom:0}
+.seg.reg{background:var(--leaf)}.seg.ot{background:var(--mustard)}
+.tag{display:inline-block;padding:1px 9px;border-radius:999px;background:var(--mustard-soft);color:var(--mustard-d);font-size:12px;font-weight:600}
+.tag.night{background:#E3E8F5;color:#3B4F86}
+@media (prefers-color-scheme:dark){.tag.night{background:#252E49;color:#A3B7EE}}
+@media (max-width:640px){
+  .erow{grid-template-columns:52px 1fr auto;grid-template-areas:"date main dur" "date pay del";gap:8px 12px}
+  .e-pay{text-align:left}
+  .grid.entry{grid-template-columns:1fr 1fr}.grid.entry>*:last-child{grid-column:span 2}
+  .card{padding:18px 16px}
+  .hero-art{width:76px;height:76px;padding:10px;border-radius:22px}
+}
+.e-pay:empty{display:none}
+
+/* podsumowanie */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.hero{grid-column:1/-1;position:relative;overflow:hidden;display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px 36px;padding:24px 28px;border-radius:18px;background:var(--crust);color:var(--crust-ink)}
+.hero .label{font-size:14px;color:var(--crust-muted)}
+.hero-time{font:700 clamp(34px,7vw,50px)/1.05 var(--display);margin:6px 0 4px}
+.hero-money{font:700 clamp(30px,6vw,42px)/1.05 var(--display);margin:6px 0 4px;color:#F4C65C}
+.hero-sub{font-size:14px;color:var(--crust-muted)}
+.hero-pay{text-align:right;position:relative}
+.hero>div{position:relative}
+.hero-mark{position:absolute;right:-14px;bottom:-22px;width:150px;height:150px;opacity:.1;pointer-events:none}
+@media (max-width:520px){.hero-pay{text-align:left}}
+.stat{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--surface2)}
+.stat .label{font-size:14px;color:var(--muted)}
+.stat .value{font-size:21px;font-weight:700;margin-top:4px}
+.stat .dec{font-size:13.5px;color:var(--muted)}
+.stat.ot{background:var(--mustard-soft);border-color:transparent}
+.stat.ot .value{color:var(--mustard-d)}
+.month-bar{display:flex;height:24px;border-radius:999px;overflow:hidden;margin:16px 0 4px;background:var(--line)}
+.month-bar .seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+
+/* panel admina */
+.urow{display:grid;grid-template-columns:minmax(140px,1.3fr) repeat(3,minmax(100px,1fr)) minmax(100px,1fr) auto;gap:10px 16px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);margin-bottom:10px}
+.urow.total{background:var(--mustard-soft);border:1.5px dashed var(--mustard)}
+.u-name{font:600 17px var(--display);display:flex;align-items:center;gap:12px}
+.u-l{display:block;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.u-v{font-weight:700}.u-d{font-size:13px;color:var(--muted)}
+.u-pay{color:var(--leaf)}
+.u-actions{display:flex;gap:8px;flex-wrap:wrap}
+.u-actions button{min-height:44px;padding:0 14px;font-size:14px}
+@media (max-width:760px){.urow{grid-template-columns:1fr 1fr}.u-name,.u-actions{grid-column:1/-1}}
+
+/* blokada PIN */
+.locked-wrap{position:relative;min-height:240px}
+.lock-overlay{position:absolute;inset:0;background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:var(--radius);text-align:center;padding:20px}
+.lock-overlay svg{width:34px;height:34px;color:var(--tomato)}
+.lock-overlay p{margin:0;color:var(--muted);max-width:290px}
+
+/* okno modalne, wybór zdjęcia, komunikaty */
+dialog{width:calc(100% - 32px);max-width:440px;padding:0;border:1px solid var(--line);border-radius:22px;background:var(--surface);color:var(--ink);box-shadow:0 24px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(28,18,10,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-body{padding:26px;max-height:88vh;overflow-y:auto}
+.modal-body h3{font:700 21px var(--display);margin:0 0 14px}
+.modal-body .field{margin-bottom:14px}
+.modal-body p{margin:0 0 14px}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions button{flex:1}
+.pin{display:flex;gap:10px;justify-content:center;margin:10px 0 4px}
+.pin input{width:56px;height:64px;min-height:0;text-align:center;font-size:26px;padding:0;border-radius:14px}
+.av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
+.av-opt{min-height:0;height:62px;padding:7px;border:2px solid transparent;border-radius:16px;background:var(--av)}
+.av-opt svg{width:100%;height:100%}
+.av-opt.on{border-color:var(--tomato);box-shadow:0 0 0 3px var(--tomato-soft)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:calc(100% - 32px);padding:12px 18px;border-radius:12px;background:var(--crust);color:var(--crust-ink);font-weight:500;z-index:100}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 </head>
 <body>
-<div class="wrap" id="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="av-sandwich" viewBox="0 0 64 64"><rect x="10" y="45" width="44" height="9" rx="4.5" fill="#D99A45"/><rect x="8" y="39" width="48" height="6" rx="3" fill="#E77F86"/><path d="M10 33h44l-7 6H17z" fill="#F4C430"/><rect x="12" y="29" width="40" height="5" rx="2.5" fill="#D8412F"/><path d="M8 29c4-5 8 1 12-3s8 3 12-1 8 3 12-1 8 3 12 0v6H8z" fill="#5DA54A"/><path d="M10 27c0-12 10-17 22-17s22 5 22 17z" fill="#E8B05A"/><g fill="#FFF3D6"><ellipse cx="24" cy="19" rx="2.2" ry="1.1"/><ellipse cx="34" cy="16" rx="2.2" ry="1.1"/><ellipse cx="42" cy="21" rx="2.2" ry="1.1"/></g></symbol><symbol id="av-baguette" viewBox="0 0 64 64"><g transform="rotate(-32 32 32)"><rect x="3" y="24" width="58" height="17" rx="8.5" fill="#D9A24E"/><path d="M16 26l4 13M27 26l4 13M38 26l4 13M49 26l3 13" stroke="#B87B2E" stroke-width="2.4" stroke-linecap="round"/></g></symbol><symbol id="av-croissant" viewBox="0 0 64 64"><path d="M6 42c1-15 11-24 26-24s25 9 26 24c-6-2-9-7-14-9-3 3-7 4-12 4s-9-1-12-4c-5 2-8 7-14 9z" fill="#E3A046"/><path d="M22 22l4 13M32 20v16M42 22l-4 13" stroke="#B87420" stroke-width="2.2" stroke-linecap="round"/></symbol><symbol id="av-burger" viewBox="0 0 64 64"><path d="M9 28c0-12 10-18 23-18s23 6 23 18z" fill="#E8B05A"/><g fill="#FFF3D6"><ellipse cx="22" cy="19" rx="2.2" ry="1.1"/><ellipse cx="34" cy="15" rx="2.2" ry="1.1"/><ellipse cx="44" cy="21" rx="2.2" ry="1.1"/></g><path d="M7 31c4-4 7 2 11-2s7 3 11-1 7 3 11-1 7 3 11 0 6 1 6 1v4H7z" fill="#5DA54A"/><path d="M9 35h46l-6 6H15z" fill="#F4C430"/><rect x="8" y="38" width="48" height="8" rx="4" fill="#6B3E26"/><path d="M9 49h46c0 4-3 6-7 6H16c-4 0-7-2-7-6z" fill="#D99A45"/></symbol><symbol id="av-tomato" viewBox="0 0 64 64"><circle cx="32" cy="36" r="20" fill="#E0412E"/><path d="M32 14l4 7 7-3-3 7 7 3-7 3 1 8-9-5-9 5 1-8-7-3 7-3-3-7 7 3z" fill="#4C8C3B"/><ellipse cx="24" cy="30" rx="4" ry="2.4" fill="#fff" opacity=".35" transform="rotate(-30 24 30)"/></symbol><symbol id="av-lettuce" viewBox="0 0 64 64"><path d="M10 48C5 24 22 8 54 12c2 28-12 44-34 42-3 0-7-2-10-6z" fill="#6DB551"/><path d="M12 50C26 36 38 26 52 14M28 38l-1-12M36 30l10 1M22 44l-9-3" stroke="#3E7F2D" stroke-width="2.4" fill="none" stroke-linecap="round"/></symbol><symbol id="av-cheese" viewBox="0 0 64 64"><path d="M6 44L56 22v22a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#F6C443"/><path d="M6 44L56 22" stroke="#E0A92A" stroke-width="2"/><circle cx="22" cy="42" r="4" fill="#E3A92B"/><circle cx="40" cy="38" r="3" fill="#E3A92B"/><circle cx="47" cy="44" r="2.4" fill="#E3A92B"/></symbol><symbol id="av-cucumber" viewBox="0 0 64 64"><g transform="rotate(-24 32 32)"><rect x="4" y="22" width="56" height="20" rx="10" fill="#4F9D44"/><rect x="10" y="26" width="44" height="5" rx="2.5" fill="#79C06B"/><circle cx="20" cy="37" r="1.5" fill="#2F6B2A"/><circle cx="32" cy="38" r="1.5" fill="#2F6B2A"/><circle cx="44" cy="37" r="1.5" fill="#2F6B2A"/></g></symbol><symbol id="av-avocado" viewBox="0 0 64 64"><path d="M32 5c10 0 20 17 20 31a20 20 0 0 1-40 0C12 22 22 5 32 5z" fill="#4C7A34"/><path d="M32 11c8 0 15 14 15 25a15 15 0 0 1-30 0c0-11 7-25 15-25z" fill="#CBDD7C"/><circle cx="32" cy="38" r="8.5" fill="#8A5A33"/><ellipse cx="29" cy="35" rx="2.4" ry="1.6" fill="#B58355"/></symbol><symbol id="av-egg" viewBox="0 0 64 64"><path d="M9 34c-1-13 10-21 23-21s25 7 23 21-9 19-25 19S10 47 9 34z" fill="#FFFFFF" stroke="#E3DACA" stroke-width="1.6"/><circle cx="32" cy="34" r="10" fill="#F5B521"/><ellipse cx="28.5" cy="30.5" rx="3" ry="2" fill="#fff" opacity=".5"/></symbol><symbol id="av-pepper" viewBox="0 0 64 64"><path d="M18 22c-6 5-8 16-5 26 3 8 9 11 19 11s16-3 19-11c3-10 1-21-5-26-4 3-9 4-14 4s-10-1-14-4z" fill="#E8402F"/><path d="M32 22v34M22 26c-3 8-3 20 1 29M42 26c3 8 3 20-1 29" stroke="#B82A1C" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="29" y="8" width="6" height="12" rx="3" fill="#4C8C3B"/></symbol><symbol id="av-onion" viewBox="0 0 64 64"><path d="M32 12c8 6 21 12 21 27a21 21 0 0 1-42 0c0-15 13-21 21-27z" fill="#B06DB3"/><path d="M32 14c-8 11-10 24-5 36M32 14c8 11 10 24 5 36" stroke="#E7C2E9" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M32 12c0-4 1-6 4-8" stroke="#5E9B45" stroke-width="3" fill="none" stroke-linecap="round"/></symbol><symbol id="av-chef" viewBox="0 0 64 64"><path d="M17 46c-9-2-11-16-2-19 0-9 11-12 17-6 6-6 17-3 17 6 9 3 7 17-2 19z" fill="#FFFFFF" stroke="#D9D2C3" stroke-width="1.6"/><rect x="17" y="45" width="30" height="10" rx="2.5" fill="#FFFFFF" stroke="#D9D2C3" stroke-width="1.6"/><path d="M24 33v8M32 31v10M40 33v8" stroke="#E4DCCB" stroke-width="2" stroke-linecap="round"/></symbol><symbol id="ico-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol></defs></svg>
+<div class="wrap">
 
-  <div id="screen-loading" style="text-align:center;padding:80px 20px;">
-    <p class="brand-eyebrow">Łączenie</p>
-    <h1>Ewidencja godzin</h1>
-    <p class="subtitle" style="margin:14px auto;">Łączenie z bazą danych w chmurze…</p>
-  </div>
+  <section id="screen-loading"><p id="loadingText" style="text-align:center;color:var(--muted)">Ładowanie…</p></section>
 
-  <!-- ============ START SCREEN ============ -->
-  <div id="screen-start" style="display:none;">
-    <header>
+  <section id="screen-start" hidden>
+    <header class="brand-head">
       <div>
-        <p class="brand-eyebrow">Panel główny</p>
         <h1>Ewidencja godzin</h1>
-        <p class="subtitle">Wybierz siebie z listy albo dodaj nową osobę.</p>
+        <p class="subtitle">Wybierz siebie z zespołu i wpisz godziny. Resztę policzymy za Ciebie.</p>
       </div>
+      <svg class="hero-art" viewBox="0 0 64 64" aria-hidden="true"><use href="#av-sandwich"/></svg>
     </header>
-
     <div class="card">
-      <h2><span class="n">§0</span> Dodaj</h2>
+      <h2>Dodaj do zespołu</h2>
       <div class="start-actions">
-        <button class="btn-primary" id="addAdminBtn" onclick="openAddPersonModal('admin')">+ Dodaj administratora</button>
-        <button class="btn-primary" onclick="openAddPersonModal('user')">+ Dodaj użytkownika</button>
+        <button class="btn-primary" id="addAdminBtn" data-action="add-person" data-type="admin">+ Dodaj administratora</button>
+        <button class="btn-primary" data-action="add-person" data-type="user">+ Dodaj pracownika</button>
       </div>
     </div>
+    <div class="card"><h2>Administratorzy</h2><div class="person-list" id="adminList"></div></div>
+    <div class="card"><h2>Pracownicy</h2><div class="person-list" id="userList"></div></div>
+  </section>
 
-    <div class="card">
-      <h2><span class="n">A</span> Administratorzy</h2>
-      <div class="person-list" id="adminList"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="n">U</span> Użytkownicy</h2>
-      <div class="person-list" id="userList"></div>
-    </div>
-
-    <p class="footer-note">Dane zapisują się automatycznie w pamięci tej przeglądarki (localStorage).</p>
-  </div>
-
-  <!-- ============ USER TIMESHEET SCREEN ============ -->
-  <div id="screen-timesheet" style="display:none;">
-    <button class="back-btn" id="tsBackBtn">← Wróć</button>
-    <header>
-      <div>
-        <p class="brand-eyebrow" id="tsEyebrow">Karta czasu pracy</p>
-        <h1 id="tsTitle">Użytkownik</h1>
-      </div>
+  <section id="screen-timesheet" hidden>
+    <button class="back-btn" id="tsBack">← Wróć do zespołu</button>
+    <header class="who-head">
+      <button class="avatar-btn" id="tsAvatar" type="button" title="Zmień zdjęcie profilowe" aria-label="Zmień zdjęcie profilowe"></button>
+      <div><h1 id="tsTitle"></h1><p class="subtitle" id="tsSub"></p></div>
     </header>
 
-    <div class="card">
-      <h2><span class="n">§1</span> Ustawienia umowy</h2>
+    <form class="card" id="settingsForm">
+      <h2>Ustawienia umowy</h2>
       <div class="grid settings">
         <div><label for="contractType">Typ umowy</label>
-          <select id="contractType"><option value="etat">Umowa o pracę (etat)</option><option value="inne">Zlecenie / dzieło / B2B</option></select>
-        </div>
-        <div><label for="rate">Stawka (zł/h)</label><input type="number" id="rate" step="0.01" min="0"></div>
-        <div id="thresholdWrap"><label for="threshold">Próg dobowy (h)</label><input type="number" id="threshold" step="0.5" min="1"></div>
-        <div id="otMultWrap"><label for="otMult">Mnożnik nadgodzin</label><input type="number" id="otMult" step="0.05" min="1"></div>
-        <div id="holMultWrap"><label for="holMult">Mnożnik niedziela/święto</label><input type="number" id="holMult" step="0.05" min="1"></div>
+          <select id="contractType"><option value="etat">Umowa o pracę (etat)</option><option value="inne">Zlecenie / dzieło / B2B</option></select></div>
+        <div><label for="rate">Stawka (zł/h)</label><input type="number" id="rate" inputmode="decimal" step="0.01" min="0"></div>
+        <div data-etat><label for="threshold">Próg dobowy (h)</label><input type="number" id="threshold" inputmode="decimal" step="0.5" min="1"></div>
+        <div data-etat><label for="otMult">Mnożnik nadgodzin</label><input type="number" id="otMult" inputmode="decimal" step="0.05" min="1"></div>
+        <div><label for="holMult">Mnożnik niedziela/święto</label><input type="number" id="holMult" inputmode="decimal" step="0.05" min="1"></div>
       </div>
-      <p class="note">Wyliczenia nadgodzin są uproszczone (próg dobowy) i mają charakter orientacyjny.</p>
-    </div>
+      <p class="note">Wyliczenia nadgodzin są uproszczone (próg dobowy) i mają charakter orientacyjny — nie zastępują przepisów Kodeksu pracy ani umowy.</p>
+    </form>
 
-    <div class="card">
-      <h2><span class="n">§2</span> Dodaj wpis</h2>
+    <form class="card" id="entryForm">
+      <h2>Dodaj wpis</h2>
       <div class="grid entry">
-        <div><label for="eDate">Data</label><input type="date" id="eDate"></div>
-        <div><label for="eFrom">Od</label><input type="time" id="eFrom"></div>
-        <div><label for="eTo">Do</label><input type="time" id="eTo"></div>
-        <div><label for="eBreak">Przerwa (min)</label><input type="number" id="eBreak" min="0" step="5" value="0"></div>
+        <div><label for="eDate">Data</label><input type="date" id="eDate" required></div>
+        <div><label for="eFrom">Od</label><input type="time" id="eFrom" required></div>
+        <div><label for="eTo">Do</label><input type="time" id="eTo" required></div>
+        <div><label for="eBreak">Przerwa (min)</label><input type="number" id="eBreak" inputmode="numeric" min="0" step="5" value="0"></div>
         <div><label for="eNote">Notatka</label><input type="text" id="eNote" placeholder="opcjonalnie"></div>
-        <div><button class="btn-primary btn-block" id="addBtn">Dodaj wpis</button></div>
+        <div><button class="btn-primary" type="submit" style="width:100%">Dodaj wpis</button></div>
       </div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="eHoliday">
-        <label for="eHoliday" style="margin:0;text-transform:none;font-weight:400;">To dzień wolny / niedziela / święto (wyższa stawka)</label>
-      </div>
-    </div>
+      <div class="checkbox-row"><input type="checkbox" id="eHoliday"><label for="eHoliday">Dzień wolny, niedziela lub święto (wyższa stawka)</label></div>
+      <div class="preview" id="entryPreview"></div>
+    </form>
 
     <div class="card">
       <div class="toolbar">
-        <h2 style="margin:0;"><span class="n">§3</span> Wpisy</h2>
+        <h2>Wpisy</h2>
         <div class="month-select">
-          <label style="margin:0;" for="monthFilter">Miesiąc</label>
-          <select id="monthFilter"></select>
-          <button class="btn-ghost" id="exportBtn">Eksport CSV</button>
+          <label for="monthSelect">Miesiąc</label>
+          <select id="monthSelect"></select>
+          <button class="btn-ghost" id="csvBtn" type="button">Eksport CSV</button>
         </div>
       </div>
-      <p class="scroll-hint">← przewiń tabelę w bok, żeby zobaczyć wszystkie kolumny →</p>
-      <div id="tableWrap"></div>
+      <div id="entriesBox"></div>
     </div>
 
     <div class="card locked-wrap">
-      <h2><span class="n">§4</span> Podsumowanie miesiąca</h2>
-      <div class="summary-grid" id="summaryGrid"></div>
-      <div class="month-bar" id="monthBar"></div>
-      <p class="note" id="summaryNote"></p>
-      <div class="lock-overlay" id="summaryLock">
-        <div class="lock-emoji">🔒</div>
-        <p>Podsumowanie i wypłata są chronione PIN-em.</p>
-        <button class="btn-primary" onclick="requestUnlockSummary()">Wpisz PIN, aby zobaczyć</button>
+      <h2>Podsumowanie miesiąca</h2>
+      <div id="summaryBox"></div>
+      <div class="lock-overlay" id="summaryLock" hidden>
+        <svg aria-hidden="true"><use href="#ico-lock"/></svg>
+        <p>Wypłata zamknięta na klucz. Wpisz PIN, żeby zobaczyć podsumowanie.</p>
+        <button class="btn-primary" data-action="unlock">Wpisz PIN</button>
       </div>
     </div>
 
     <div class="card">
-      <h2><span class="n">§5</span> Kopia zapasowa</h2>
-      <p class="note" style="margin-top:0;">Kopia zapasowa danych tego użytkownika (wpisy + ustawienia).</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn-ghost" id="backupExportBtn">Pobierz kopię (.json)</button>
-        <button class="btn-ghost" id="backupImportBtn">Wczytaj kopię (.json)</button>
-        <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
+      <h2>Kopia zapasowa</h2>
+      <p class="note" style="margin-top:0">Kopia wpisów i ustawień tej osoby (plik .json). Wczytanie kopii zastępuje obecne wpisy.</p>
+      <div class="start-actions" style="margin-top:12px">
+        <button class="btn-ghost" id="backupExportBtn" type="button">Pobierz kopię (.json)</button>
+        <button class="btn-ghost" id="backupImportBtn" type="button">Wczytaj kopię (.json)</button>
+        <input type="file" id="backupFile" accept="application/json" hidden>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ============ ADMIN SCREEN ============ -->
-  <div id="screen-admin" style="display:none;">
-    <button class="back-btn" id="adminBackBtn">← Wróć</button>
-    <header>
-      <div>
-        <p class="brand-eyebrow">Panel administratora</p>
-        <h1 id="adminTitle">Administrator</h1>
-        <p class="subtitle">Podsumowanie godzin i wypłat wszystkich użytkowników.</p>
-      </div>
+  <section id="screen-admin" hidden>
+    <button class="back-btn" id="adminBack">← Wróć do zespołu</button>
+    <header class="who-head">
+      <button class="avatar-btn" id="adminAvatar" type="button" title="Zmień zdjęcie profilowe" aria-label="Zmień zdjęcie profilowe"></button>
+      <div><h1 id="adminTitle"></h1><p class="subtitle">Godziny i wypłaty całego zespołu w jednym miejscu.</p></div>
     </header>
-
     <div class="card">
       <div class="toolbar">
-        <h2 style="margin:0;"><span class="n">§A</span> Wszyscy użytkownicy</h2>
-        <div class="month-select">
-          <label style="margin:0;" for="adminMonthFilter">Miesiąc</label>
-          <select id="adminMonthFilter"></select>
-        </div>
+        <h2>Cały zespół</h2>
+        <div class="month-select"><label for="adminMonth">Miesiąc</label><select id="adminMonth"></select></div>
       </div>
-      <p class="scroll-hint">← przewiń tabelę w bok →</p>
-      <div id="adminTableWrap"></div>
+      <div id="adminBox"></div>
     </div>
-  </div>
-
-  <!-- ============ MODAL ============ -->
-  <div class="modal-overlay" id="modalOverlay" style="display:none;">
-    <div class="modal-box" id="modalBox"></div>
-  </div>
+  </section>
 
 </div>
 
+<dialog id="modal"></dialog>
+<div id="toast" role="status" hidden></div>
 <script>
-const $ = (id) => document.getElementById(id);
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-/* ---------- storage / data model ---------- */
-let appData = { admins: [], users: [] };
-let currentUserId = null;
-let currentAdminId = null;
-let summaryUnlocked = false;
-let viewingAsAdmin = false;
-let currentTsMonth = null;
-let currentAdminMonth = null;
-
-function simpleHash(str){
-  let hash = 5381;
-  for(let i=0;i<str.length;i++){ hash = ((hash<<5)+hash) + str.charCodeAt(i); hash = hash & 0xFFFFFFFF; }
-  return (hash>>>0).toString(36);
-}
-function normAnswer(s){ return (s||'').trim().toLowerCase(); }
-
-/* ---------- Firebase setup ---------- */
-const firebaseConfig = {
+/* ============ Firebase ============
+   Struktura bazy:
+     users/{userId}                    – profil, PIN, ustawienia umowy
+     users/{userId}/entries/{entryId}  – pojedynczy wpis czasu pracy (pole month = "RRRR-MM")
+     admins/{adminId}                  – konto administratora
+   Każdy wpis to osobny dokument, więc równoczesne zapisy różnych osób się nie nadpisują. */
+firebase.initializeApp({
   apiKey: "AIzaSyChw4HMNtmL9-bwH-3CqMyJB6KHiUvRqTo",
   authDomain: "ewidencja-godzin-e03dd.firebaseapp.com",
   projectId: "ewidencja-godzin-e03dd",
   storageBucket: "ewidencja-godzin-e03dd.firebasestorage.app",
   messagingSenderId: "1034276533131",
   appId: "1:1034276533131:web:bdbdf153b282d946f8358e"
-};
-firebase.initializeApp(firebaseConfig);
+});
 const db = firebase.firestore();
-const appDocRef = db.collection('app').doc('data');
-let firstSnapshotHandled = false;
+const usersCol  = db.collection('users');
+const adminsCol = db.collection('admins');
+const entriesCol = uid => usersCol.doc(uid).collection('entries');
 
-function loadAppData(){
-  appDocRef.onSnapshot((doc)=>{
-    if(doc.exists){
-      appData = doc.data();
-      if(!appData.admins) appData.admins = [];
-      if(!appData.users) appData.users = [];
-    } else {
-      appData = { admins: [], users: [] };
-    }
-    if(!firstSnapshotHandled){
-      firstSnapshotHandled = true;
-      maybeMigrateOldData();
-      $('screen-loading').style.display = 'none';
-      $('screen-start').style.display = 'block';
-      renderStart();
-    } else {
-      refreshCurrentScreen();
-    }
-  }, (err)=>{
-    console.error(err);
-    $('screen-loading').innerHTML = '<p class="subtitle">Nie udało się połączyć z bazą danych w chmurze. Sprawdź połączenie z internetem i odśwież stronę.</p>';
-  });
+/* ============ Stan aplikacji ============ */
+const state = {
+  admins: [], users: [],
+  screen: 'loading',
+  userId: null, adminId: null,
+  asAdmin: false, unlocked: false,
+  month: '', adminMonth: '',
+  entries: [],        // wpisy otwartego pracownika w wybranym miesiącu
+  adminEntries: {}    // userId -> wpisy w wybranym miesiącu (panel admina)
+};
+const unsub = { entries: null, admin: [], adminKey: '' };
+const getUser  = id => state.users.find(u => u.id === id);
+const getAdmin = id => state.admins.find(a => a.id === id);
+
+/* ============ Czas, formatowanie, obliczenia ============ */
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const monthKey = date => date.slice(0, 7);
+const MONTHS = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+const monthLabel = key => { const [y, m] = key.split('-'); return `${MONTHS[+m - 1]} ${y}`; };
+const weekday = date => new Date(date + 'T12:00:00').toLocaleDateString('pl-PL', { weekday: 'short' });
+const addOneDay = date => { const [y, m, d] = date.split('-').map(Number); const n = new Date(y, m - 1, d + 1); return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`; };
+const toMinutes = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const hm  = m => `${Math.floor(m / 60)} h ${pad(m % 60)} min`;
+const dec = m => (m / 60).toFixed(2).replace('.', ',');
+const zl  = cents => (cents / 100).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+const num = x => String(x).replace('.', ',');
+const byDateTime = (a, b) => a.date.localeCompare(b.date) || a.from.localeCompare(b.from);
+const byName = (a, b) => a.name.localeCompare(b.name, 'pl');
+const defaultSettings = () => ({ contractType: 'etat', rate: 30, threshold: 8, otMult: 1.5, holMult: 2 });
+const settingsOf = u => ({ ...defaultSettings(), ...(u && u.settings) });
+
+function monthOptions(selected, count = 36) {
+  const list = [], now = new Date();
+  for (let i = 0; i < count; i++) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); list.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}`); }
+  if (selected && !list.includes(selected)) list.push(selected);
+  return list.sort().reverse();
 }
-function saveAppData(){
-  appDocRef.set(appData).catch((e)=>{
-    console.error(e);
-    alert('Błąd zapisu do chmury — sprawdź połączenie z internetem.');
-  });
+function fillMonthSelect(select, selected) {
+  select.innerHTML = monthOptions(selected).map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+  select.value = selected;
 }
-function refreshCurrentScreen(){
-  if($('screen-start').style.display !== 'none') renderStart();
-  else if($('screen-timesheet').style.display !== 'none'){
-    if(!getUser(currentUserId)){ backToStart(); return; }
-    renderTimesheet();
+
+/* Wszystko liczone w minutach i groszach – bez błędów zaokrągleń. */
+function computeEntry(e, s) {
+  const start = toMinutes(e.from); let end = toMinutes(e.to);
+  const night = end <= start;
+  if (night) end += 1440;
+  const w = Math.max(0, end - start - (e.brk || 0));
+  let reg = w, ot = 0, hol = 0;
+  if (e.holiday) { reg = 0; hol = w; }
+  else if (s.contractType === 'etat') { reg = Math.min(w, Math.round(s.threshold * 60)); ot = w - reg; }
+  const pay = (min, mult) => Math.round(min * s.rate * mult / 60 * 100);
+  const cents = pay(reg, 1) + pay(ot, s.otMult) + pay(hol, s.holMult);
+  return { night, w, reg, ot, hol, cents };
+}
+function totals(list, s) {
+  const t = { w: 0, reg: 0, ot: 0, hol: 0, cents: 0 }, days = new Set();
+  for (const e of list) {
+    const c = computeEntry(e, s);
+    t.w += c.w; t.reg += c.reg; t.ot += c.ot; t.hol += c.hol; t.cents += c.cents; days.add(e.date);
   }
-  else if($('screen-admin').style.display !== 'none') renderAdminScreen();
+  t.days = days.size; t.extra = t.ot + t.hol;
+  return t;
 }
 
-function defaultSettings(){
-  return { contractType:'etat', rate:30, threshold:8, otMult:1.5, holMult:2.0 };
+/* ============ PIN: Web Crypto ============
+   Cztery cyfry to blokada przed przypadkowym kliknięciem, nie prawdziwe zabezpieczenie.
+   Hash = SHA-256 z identyfikatorem konta jako solą. */
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
 }
+const normAnswer = s => (s || '').trim().toLowerCase();
+const secretHash = (id, value) => sha256(`${id}:${value}`);
 
-/* ---------- migration from old single-user version ---------- */
-function maybeMigrateOldData(){
-  if(appData.users.length>0 || appData.admins.length>0) return;
-  const oldEntries = localStorage.getItem('ewidencja_entries');
-  const oldSettings = localStorage.getItem('ewidencja_settings');
-  if(!oldEntries) return;
-  let entries = [], settings = defaultSettings();
-  try{ entries = JSON.parse(oldEntries) || []; }catch(e){}
-  try{ if(oldSettings) settings = JSON.parse(oldSettings); }catch(e){}
-  if(entries.length===0) return;
-  openMigrationModal(entries, settings);
+/* Tylko do odczytu PIN-ów zapisanych przez starszą wersję aplikacji.
+   Po pierwszym poprawnym użyciu hash jest automatycznie zamieniany na SHA-256. */
+function legacyHash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); h = h & 0xFFFFFFFF; }
+  return (h >>> 0).toString(36);
 }
-
-function openMigrationModal(entries, settings){
-  $('modalBox').innerHTML = `
-    <h3>Znaleziono dane z poprzedniej wersji</h3>
-    <p class="note" style="margin-top:0;">Wykryto ${entries.length} istniejących wpisów godzin (${escapeHtml(settings.workerName||'')}). Przenieś je na nowe konto użytkownika, żeby ich nie stracić.</p>
-    <div class="field"><label>Imię użytkownika</label><input type="text" id="migName" value="${escapeHtml(settings.workerName||'Użytkownik')}"></div>
-    <div class="field"><label>Ustaw 4-cyfrowy PIN</label>
-      <div class="pin-display">
-        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
-      </div>
-    </div>
-    <div class="field"><label>Pytanie pomocnicze (na wypadek zapomnienia PIN)</label><input type="text" id="migQ" placeholder="np. Jaki jest twój ulubiony kolor?"></div>
-    <div class="field"><label>Odpowiedź</label><input type="text" id="migA"></div>
-    <p class="modal-error" id="migErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="skipMigration()">Pomiń</button>
-      <button class="btn-primary" onclick="confirmMigration()">Przenieś dane</button>
-    </div>
-  `;
-  window._migEntries = entries; window._migSettings = settings;
-  setupPinAutoAdvance();
-  showModal();
-}
-function skipMigration(){ closeModal(); }
-function confirmMigration(){
-  const name = $('migName').value.trim();
-  const pin = getPinValue();
-  const q = $('migQ').value.trim();
-  const a = $('migA').value.trim();
-  if(!name || pin.length!==4 || !q || !a){
-    $('migErr').textContent = 'Uzupełnij wszystkie pola (PIN musi mieć 4 cyfry).';
-    $('migErr').style.display='block';
-    return;
+const AVATARS = [["sandwich", "Kanapka", "#FBE3B6"], ["baguette", "Bagietka", "#F6E0B5"], ["croissant", "Rogalik", "#FCE5C2"], ["burger", "Burger", "#F9D9B8"], ["tomato", "Pomidor", "#FAD3CC"], ["lettuce", "Sałata", "#DCEFD0"], ["cheese", "Ser", "#FFF0B8"], ["cucumber", "Ogórek", "#D7EBCB"], ["avocado", "Awokado", "#E4EEC2"], ["egg", "Jajko", "#FBEFD2"], ["pepper", "Papryka", "#F9D0C6"], ["onion", "Cebula", "#EBD5EE"], ["chef", "Szef kuchni", "#E3E8F0"]];
+const avatarOf = p => {
+  let a = AVATARS.find(x => x[0] === p.avatar);
+  if (!a) {
+    if (p.type === 'admin') a = AVATARS[12];
+    else { let h = 0; for (const ch of String(p.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; a = AVATARS[h % 12]; }
   }
-  const s = window._migSettings;
-  appData.users.push({
-    id: Date.now(),
-    name,
-    pinHash: simpleHash(pin),
-    question: q,
-    answerHash: simpleHash(normAnswer(a)),
-    settings: { contractType: s.contractType||'etat', rate: s.rate||30, threshold: s.threshold||8, otMult: s.otMult||1.5, holMult: s.holMult||2.0 },
-    entries: window._migEntries
-  });
-  saveAppData();
-  closeModal();
-  renderStart();
+  return a;
+};
+const avatarHtml = (p, cls = '') => { const [key, label, bg] = avatarOf(p);
+  return `<span class="avatar ${cls}" style="--av:${bg}" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 64 64"><use href="#av-${key}"/></svg></span>`; };
+const avatarPicker = selected => `<div class="field"><label>Zdjęcie profilowe</label><div class="av-grid">${AVATARS.map(([k, label, bg]) =>
+  `<button type="button" class="av-opt${k === selected ? ' on' : ''}" data-av="${k}" aria-pressed="${k === selected}" aria-label="${label}" title="${label}" style="--av:${bg}"><svg viewBox="0 0 64 64"><use href="#av-${k}"/></svg></button>`).join('')}</div></div>`;
+function bindAvatarPicker(root) {
+  const opts = [...root.querySelectorAll('.av-opt')];
+  opts.forEach(b => b.addEventListener('click', () => opts.forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); })));
+}
+const pickedAvatar = () => dlg.querySelector('.av-opt.on')?.dataset.av;
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Dzień dobry' : h < 18 ? 'Cześć' : 'Dobry wieczór'; };
+const personRef = p => (p.type === 'admin' ? adminsCol : usersCol).doc(p.id);
+
+async function verifySecret(person, kind, input) {          // kind: 'pin' | 'answer'
+  const value = kind === 'answer' ? normAnswer(input) : input;
+  if (person[kind + 'Alg'] === 'sha256') return person[kind + 'Hash'] === await secretHash(person.id, value);
+  if (person[kind + 'Hash'] !== legacyHash(value)) return false;
+  personRef(person).update({ [kind + 'Hash']: await secretHash(person.id, value), [kind + 'Alg']: 'sha256' }).catch(console.error);
+  return true;
 }
 
-/* ---------- modal helpers ---------- */
-function showModal(){ $('modalOverlay').style.display='flex'; }
-function closeModal(){ $('modalOverlay').style.display='none'; $('modalBox').innerHTML=''; }
-function setupPinAutoAdvance(container){
-  const scope = container || document;
-  const inputs = scope.querySelectorAll('.pin-d');
-  inputs.forEach((inp,idx)=>{
-    inp.addEventListener('input', ()=>{
-      inp.value = inp.value.replace(/[^0-9]/g,'').slice(0,1);
-      if(inp.value && inputs[idx+1]) inputs[idx+1].focus();
+/* ============ Drobne narzędzia UI ============ */
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
+}
+async function save(promise, msg = 'Nie udało się zapisać zmian. Sprawdź połączenie z internetem.') {
+  try { await promise; return true; } catch (e) { console.error(e); toast(msg); return false; }
+}
+function onListenError(err) {
+  console.error(err);
+  if (state.screen === 'loading') {
+    $('loadingText').textContent = err.code === 'permission-denied'
+      ? 'Brak uprawnień do bazy danych. Sprawdź reguły Firestore.'
+      : 'Nie udało się połączyć z bazą danych. Sprawdź internet i odśwież stronę.';
+  } else toast('Utracono połączenie z bazą danych.');
+}
+async function commitOps(ops) {                              // batch ma limit 500 operacji
+  for (let i = 0; i < ops.length; i += 400) {
+    const batch = db.batch();
+    ops.slice(i, i + 400).forEach(op => op(batch));
+    await batch.commit();
+  }
+}
+
+/* ============ Okno modalne (<dialog>) ============ */
+const dlg = $('modal');
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+function openModal(title, bodyHtml, buttons) {
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  body.innerHTML = `<h3>${esc(title)}</h3>${bodyHtml}<p class="form-error" hidden></p>`;
+  const actions = document.createElement('div');
+  actions.className = 'modal-actions';
+  for (const b of buttons) {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = b.cls || 'btn-ghost'; btn.textContent = b.text;
+    btn.addEventListener('click', () => b.onClick());
+    actions.append(btn);
+  }
+  body.append(actions);
+  dlg.replaceChildren(body);
+  if (!dlg.open) dlg.showModal();
+  bindPin(body);
+  bindAvatarPicker(body);
+  return body;
+}
+const closeModal = () => { if (dlg.open) dlg.close(); };
+const modalError = msg => { const p = dlg.querySelector('.form-error'); p.textContent = msg; p.hidden = !msg; };
+function confirmModal(title, text, okText, onOk) {
+  openModal(title, `<p>${esc(text)}</p>`, [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: okText, cls: 'btn-danger', onClick: () => { closeModal(); onOk(); } }
+  ]);
+}
+
+/* pola PIN */
+const pinFields = label => `<div class="field"><label>${esc(label)}</label><div class="pin">${
+  '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="Cyfra PIN">'.repeat(4)}</div></div>`;
+function bindPin(root) {
+  const inputs = [...root.querySelectorAll('.pin input')];
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+      if (inp.value && inputs[i + 1]) inputs[i + 1].focus();
     });
-    inp.addEventListener('keydown', (e)=>{
-      if(e.key==='Backspace' && !inp.value && inputs[idx-1]) inputs[idx-1].focus();
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && inputs[i - 1]) inputs[i - 1].focus();
+      if (e.key === 'Enter') root.querySelector('.btn-primary')?.click();
     });
   });
-  if(inputs[0]) inputs[0].focus();
+  inputs[0]?.focus();
 }
-function getPinValue(container){
-  const scope = container || document;
-  return Array.from(scope.querySelectorAll('.pin-d')).map(i=>i.value).join('');
+const readPin = () => [...dlg.querySelectorAll('.pin input')].map(i => i.value).join('');
+const clearPin = () => { const f = [...dlg.querySelectorAll('.pin input')]; f.forEach(i => { i.value = ''; }); f[0]?.focus(); };
+
+/* ============ Dodawanie i usuwanie osób ============ */
+function openAddPerson(type) {
+  if (type === 'admin' && state.admins.length >= 1) { toast('Można mieć tylko jedno konto administratora.'); return; }
+  openModal(type === 'admin' ? 'Dodaj administratora' : 'Dodaj użytkownika', `
+    <div class="field"><label for="npName">Imię lub etykieta</label><input type="text" id="npName" autocomplete="off"></div>
+    ${avatarPicker(type === 'admin' ? 'chef' : 'sandwich')}
+    ${pinFields('Ustaw 4-cyfrowy PIN')}
+    <div class="field"><label for="npQ">Pytanie pomocnicze (gdy zapomnisz PIN)</label><input type="text" id="npQ" autocomplete="off"></div>
+    <div class="field"><label for="npA">Odpowiedź</label><input type="text" id="npA" autocomplete="off"></div>`, [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: 'Dodaj', cls: 'btn-primary', onClick: async () => {
+      const name = $('npName').value.trim(), pin = readPin(), question = $('npQ').value.trim(), answer = $('npA').value.trim();
+      if (!name || pin.length !== 4 || !question || !answer) { modalError('Uzupełnij wszystkie pola (PIN ma 4 cyfry).'); return; }
+      if (type === 'admin' && state.admins.length >= 1) { closeModal(); return; }
+      const ref = (type === 'admin' ? adminsCol : usersCol).doc();
+      const person = {
+        name, question, avatar: pickedAvatar() || (type === 'admin' ? 'chef' : 'sandwich'),
+        pinHash: await secretHash(ref.id, pin), pinAlg: 'sha256',
+        answerHash: await secretHash(ref.id, normAnswer(answer)), answerAlg: 'sha256'
+      };
+      if (type === 'user') person.settings = defaultSettings();
+      if (await save(ref.set(person))) closeModal();
+    } }
+  ]);
 }
 
-/* ---------- add admin/user ---------- */
-function openAddPersonModal(type){
-  if(type==='admin' && appData.admins.length >= 1){
-    alert('Można mieć tylko jedno konto administratora. Usuń istniejące, jeśli chcesz dodać inne.');
-    return;
-  }
-  const label = type==='admin' ? 'administratora' : 'użytkownika';
-  $('modalBox').innerHTML = `
-    <h3>Dodaj ${label}</h3>
-    <div class="field"><label>Imię / etykieta</label><input type="text" id="npName" placeholder="np. Jan Kowalski"></div>
-    <div class="field"><label>Ustaw 4-cyfrowy PIN</label>
-      <div class="pin-display">
-        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
-      </div>
-    </div>
-    <div class="field"><label>Pytanie pomocnicze (na wypadek zapomnienia PIN)</label><input type="text" id="npQ" placeholder="np. Jak nazywał się twój pierwszy pies?"></div>
-    <div class="field"><label>Odpowiedź</label><input type="text" id="npA"></div>
-    <p class="modal-error" id="npErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-primary" onclick="confirmAddPerson('${type}')">Dodaj</button>
-    </div>
-  `;
-  setupPinAutoAdvance();
-  showModal();
-}
-function confirmAddPerson(type){
-  if(type==='admin' && appData.admins.length >= 1){
-    closeModal();
-    return;
-  }
-  const name = $('npName').value.trim();
-  const pin = getPinValue();
-  const q = $('npQ').value.trim();
-  const a = $('npA').value.trim();
-  if(!name || pin.length!==4 || !q || !a){
-    $('npErr').textContent = 'Uzupełnij wszystkie pola (PIN musi mieć 4 cyfry).';
-    $('npErr').style.display='block';
-    return;
-  }
-  const person = { id: Date.now(), name, pinHash: simpleHash(pin), question: q, answerHash: simpleHash(normAnswer(a)) };
-  if(type==='user'){ person.settings = defaultSettings(); person.entries = []; appData.users.push(person); }
-  else { appData.admins.push(person); }
-  saveAppData();
-  closeModal();
-  renderStart();
+function openAvatarPicker(person) {
+  if (!person) return;
+  openModal('Zdjęcie profilowe', avatarPicker(avatarOf(person)[0]), [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: 'Zapisz', cls: 'btn-primary', onClick: async () => {
+      const key = pickedAvatar();
+      if (key && await save(personRef(person).update({ avatar: key }))) closeModal();
+    } }
+  ]);
 }
 
-/* ---------- delete person ---------- */
-function deletePerson(type, id, ev){
-  ev.stopPropagation();
-  if(type==='admin'){
-    const admin = appData.admins.find(p=>p.id===id);
-    openAdminDeleteModal(admin);
-    return;
-  }
-  const user = appData.users.find(p=>p.id===id);
-  openUserDeleteModal(user);
+function requestPin(person, onSuccess, title = `PIN – ${person.name}`) {
+  openModal(title, pinFields('Wpisz PIN') + '<button type="button" class="link-btn" id="forgotLink">Zapomniałem PIN</button>', [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: 'Zatwierdź', cls: 'btn-primary', onClick: async () => {
+      if (await verifySecret(person, 'pin', readPin())) { closeModal(); onSuccess(); }
+      else { modalError('Niepoprawny PIN. Spróbuj ponownie.'); clearPin(); }
+    } }
+  ]);
+  $('forgotLink').addEventListener('click', () => openForgotPin(person));
 }
 
-function openUserDeleteModal(user){
-  $('modalBox').innerHTML = `
-    <h3>Usuń użytkownika — ${escapeHtml(user.name)}</h3>
-    <p class="note" style="margin-top:0;">To usunie użytkownika i wszystkie jego ${user.entries.length} wpis(ów) godzin bezpowrotnie.</p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-danger" onclick="confirmDeleteUser(${user.id})">Usuń użytkownika</button>
-    </div>
-  `;
-  showModal();
-}
-function confirmDeleteUser(id){
-  appData.users = appData.users.filter(p=>p.id!==id);
-  saveAppData();
-  closeModal();
-  renderStart();
-}
-
-function openAdminDeleteModal(admin){
-  $('modalBox').innerHTML = `
-    <h3>Usuń administratora — ${escapeHtml(admin.name)}</h3>
-    <p class="note" style="margin-top:0;">To usunie konto administratora bezpowrotnie. Potwierdź, wpisując PIN.</p>
-    <div class="pin-display">
-      <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-      <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
-    </div>
-    <p class="modal-error" id="delErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-danger" onclick="confirmDeleteAdmin(${admin.id})">Usuń administratora</button>
-    </div>
-    <button class="link-btn" onclick="openForgotPinModal('admin', ${admin.id}, -1)">Zapomniałem PIN</button>
-  `;
-  setupPinAutoAdvance();
-  showModal();
-}
-function confirmDeleteAdmin(id){
-  const admin = appData.admins.find(p=>p.id===id);
-  const pin = getPinValue();
-  if(simpleHash(pin) !== admin.pinHash){
-    $('delErr').textContent = 'Niepoprawny PIN.';
-    $('delErr').style.display='block';
-    document.querySelectorAll('.pin-d').forEach(i=>i.value='');
-    document.querySelector('.pin-d').focus();
-    return;
-  }
-  appData.admins = appData.admins.filter(p=>p.id!==id);
-  saveAppData();
-  closeModal();
-  renderStart();
+function openForgotPin(person) {
+  openModal(`Reset PIN – ${person.name}`, `
+    <p class="muted">${esc(person.question || '')}</p>
+    <div class="field"><label for="fpAnswer">Odpowiedź</label><input type="text" id="fpAnswer" autocomplete="off"></div>
+    ${pinFields('Nowy 4-cyfrowy PIN')}`, [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: 'Ustaw nowy PIN', cls: 'btn-primary', onClick: async () => {
+      const pin = readPin();
+      if (!await verifySecret(person, 'answer', $('fpAnswer').value)) { modalError('Odpowiedź jest nieprawidłowa.'); return; }
+      if (pin.length !== 4) { modalError('Nowy PIN musi mieć 4 cyfry.'); return; }
+      if (await save(personRef(person).update({ pinHash: await secretHash(person.id, pin), pinAlg: 'sha256' }))) {
+        closeModal(); toast('PIN został zmieniony.');
+      }
+    } }
+  ]);
 }
 
-/* ---------- PIN login modal (for admin entry, or unlocking summary) ---------- */
-function openPinLoginModal(person, onSuccess){
-  $('modalBox').innerHTML = `
-    <h3>Wpisz PIN — ${escapeHtml(person.name)}</h3>
-    <div class="pin-display">
-      <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-      <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
-    </div>
-    <p class="modal-error" id="loginErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-primary" id="loginSubmitBtn">Zatwierdź</button>
-    </div>
-    <button class="link-btn" onclick="openForgotPinModal('${person.__type}', ${person.id}, ${onSuccessRegistry(onSuccess)})">Zapomniałem PIN</button>
-  `;
-  setupPinAutoAdvance();
-  const submit = ()=>{
-    const pin = getPinValue();
-    if(simpleHash(pin) === person.pinHash){ closeModal(); onSuccess(); }
-    else{
-      $('loginErr').textContent = 'Niepoprawny PIN. Spróbuj ponownie.';
-      $('loginErr').style.display='block';
-      document.querySelectorAll('.pin-d').forEach(i=>i.value='');
-      document.querySelector('.pin-d').focus();
-    }
-  };
-  $('loginSubmitBtn').addEventListener('click', submit);
-  document.querySelectorAll('.pin-d').forEach(inp=>{
-    inp.addEventListener('keydown',(e)=>{ if(e.key==='Enter') submit(); });
+function openAdminResetPin(userId) {
+  const user = getUser(userId); if (!user) return;
+  openModal(`Reset PIN – ${user.name}`, `<p class="muted">Jako administrator ustawiasz nowy PIN bez pytania pomocniczego.</p>${pinFields('Nowy 4-cyfrowy PIN')}`, [
+    { text: 'Anuluj', onClick: closeModal },
+    { text: 'Ustaw PIN', cls: 'btn-primary', onClick: async () => {
+      const pin = readPin();
+      if (pin.length !== 4) { modalError('PIN musi mieć 4 cyfry.'); return; }
+      if (await save(personRef(user).update({ pinHash: await secretHash(user.id, pin), pinAlg: 'sha256' }))) {
+        closeModal(); toast(`Nowy PIN dla ${user.name} został ustawiony.`);
+      }
+    } }
+  ]);
+}
+
+function requestDeleteUser(id) {
+  const user = getUser(id); if (!user) return;
+  confirmModal(`Usuń użytkownika – ${user.name}`, 'Użytkownik i wszystkie jego wpisy zostaną usunięte bezpowrotnie.', 'Usuń użytkownika', async () => {
+    try {
+      const snap = await entriesCol(id).get();
+      await commitOps([...snap.docs.map(d => b => b.delete(d.ref)), b => b.delete(usersCol.doc(id))]);
+    } catch (e) { console.error(e); toast('Nie udało się usunąć użytkownika.'); }
   });
-  showModal();
 }
-// small registry so we can reference an onSuccess callback from inline onclick
-let _cbRegistry = {}; let _cbCounter = 0;
-function onSuccessRegistry(fn){ const id = _cbCounter++; _cbRegistry[id]=fn; return id; }
-
-function openForgotPinModal(type, id, cbId){
-  const list = type==='admin' ? appData.admins : appData.users;
-  const person = list.find(p=>p.id===id);
-  $('modalBox').innerHTML = `
-    <h3>Reset PIN — ${escapeHtml(person.name)}</h3>
-    <p class="note" style="margin-top:0;">${escapeHtml(person.question)}</p>
-    <div class="field"><label>Odpowiedź</label><input type="text" id="fpAnswer"></div>
-    <div class="field"><label>Nowy 4-cyfrowy PIN</label>
-      <div class="pin-display">
-        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
-      </div>
-    </div>
-    <p class="modal-error" id="fpErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-primary" onclick="confirmForgotPin('${type}', ${id}, ${cbId})">Ustaw nowy PIN</button>
-    </div>
-  `;
-  setupPinAutoAdvance();
-  showModal();
-}
-function confirmForgotPin(type, id, cbId){
-  const list = type==='admin' ? appData.admins : appData.users;
-  const person = list.find(p=>p.id===id);
-  const answer = $('fpAnswer').value.trim();
-  const pin = getPinValue();
-  if(simpleHash(normAnswer(answer)) !== person.answerHash){
-    $('fpErr').textContent = 'Odpowiedź nieprawidłowa.';
-    $('fpErr').style.display='block';
-    return;
-  }
-  if(pin.length!==4){
-    $('fpErr').textContent = 'Nowy PIN musi mieć 4 cyfry.';
-    $('fpErr').style.display='block';
-    return;
-  }
-  person.pinHash = simpleHash(pin);
-  saveAppData();
-  closeModal();
-  alert('PIN został zmieniony. Zaloguj się ponownie nowym PIN-em.');
-  const fn = _cbRegistry[cbId];
-  // reopen login so they can use new pin right away, or just return to start
-  renderStart();
+function requestDeleteAdmin(id) {
+  const admin = getAdmin(id); if (!admin) return;
+  requestPin(admin, () => confirmModal(`Usuń administratora – ${admin.name}`, 'Konto administratora zostanie usunięte bezpowrotnie.', 'Usuń administratora',
+    () => save(adminsCol.doc(id).delete())), `Usuń administratora – ${admin.name}. Potwierdź PIN-em`);
 }
 
-/* ---------- navigation ---------- */
-function selectUser(userId){
-  currentUserId = userId;
-  summaryUnlocked = false;
-  viewingAsAdmin = false;
-  currentTsMonth = null;
-  $('screen-start').style.display='none';
-  $('screen-admin').style.display='none';
-  $('screen-timesheet').style.display='block';
-  $('tsBackBtn').textContent = '← Wróć do listy';
-  $('tsBackBtn').onclick = backToStart;
-  const user = getUser(userId);
-  $('tsTitle').textContent = user.name;
-  $('tsEyebrow').textContent = 'Karta czasu pracy';
-  loadUserIntoForm(user);
-  renderTimesheet(true);
+/* ============ Nawigacja ============ */
+function show(screen) {
+  state.screen = screen;
+  for (const name of ['loading', 'start', 'timesheet', 'admin']) $('screen-' + name).hidden = name !== screen;
+  window.scrollTo(0, 0);
 }
-function selectUserFromAdmin(userId){
-  currentUserId = userId;
-  summaryUnlocked = true; // admin already authenticated, sees everything
-  viewingAsAdmin = true;
-  currentTsMonth = null;
-  $('screen-admin').style.display='none';
-  $('screen-timesheet').style.display='block';
-  $('tsBackBtn').textContent = '← Wróć do panelu administratora';
-  $('tsBackBtn').onclick = ()=>{ $('screen-timesheet').style.display='none'; showAdminScreen(); };
-  const user = getUser(userId);
-  $('tsTitle').textContent = user.name + ' (podgląd administratora)';
-  $('tsEyebrow').textContent = 'Karta czasu pracy';
-  loadUserIntoForm(user);
-  renderTimesheet(true);
-}
-function backToStart(){
-  currentUserId = null; currentAdminId = null; summaryUnlocked = false; viewingAsAdmin = false;
-  $('screen-timesheet').style.display='none';
-  $('screen-admin').style.display='none';
-  $('screen-start').style.display='block';
-  renderStart();
-}
-function requestAdminLogin(adminId){
-  const admin = appData.admins.find(a=>a.id===adminId);
-  admin.__type = 'admin';
-  openPinLoginModal(admin, ()=>{ currentAdminId = adminId; showAdminScreen(); });
-}
-function requestUnlockSummary(){
-  const user = getUser(currentUserId);
-  user.__type = 'user';
-  openPinLoginModal(user, ()=>{ summaryUnlocked = true; renderSummary(); });
-}
+function stopEntries() { if (unsub.entries) { unsub.entries(); unsub.entries = null; } }
+function stopAdmin() { unsub.admin.forEach(f => f()); unsub.admin = []; unsub.adminKey = ''; }
 
-function getUser(id){ return appData.users.find(u=>u.id===id); }
-
-/* ---------- render start screen ---------- */
-function renderStart(){
-  const addAdminBtn = $('addAdminBtn');
-  if(appData.admins.length >= 1){
-    addAdminBtn.disabled = true;
-    addAdminBtn.textContent = 'Administrator już istnieje';
-    addAdminBtn.style.opacity = '0.5';
-    addAdminBtn.style.cursor = 'not-allowed';
-  } else {
-    addAdminBtn.disabled = false;
-    addAdminBtn.textContent = '+ Dodaj administratora';
-    addAdminBtn.style.opacity = '1';
-    addAdminBtn.style.cursor = 'pointer';
-  }
-  const aWrap = $('adminList'), uWrap = $('userList');
-  aWrap.innerHTML = appData.admins.length ? appData.admins.map(a=>`
-    <div class="person-card" onclick="requestAdminLogin(${a.id})">
-      <span class="pname">🔑 ${escapeHtml(a.name)}</span>
-      <span class="person-actions"><span class="lock-icon">chroniony PIN</span>
-        <button class="icon-btn" onclick="deletePerson('admin', ${a.id}, event)" title="Usuń">✕</button>
-      </span>
-    </div>`).join('') : '<div class="empty">Brak administratorów — dodaj pierwszego powyżej.</div>';
-
-  uWrap.innerHTML = appData.users.length ? appData.users.map(u=>`
-    <div class="person-card" onclick="selectUser(${u.id})">
-      <span class="pname">👤 ${escapeHtml(u.name)}</span>
-      <span class="person-actions"><span class="lock-icon">${u.entries.length} wpis(ów)</span>
-        <button class="icon-btn" onclick="deletePerson('user', ${u.id}, event)" title="Usuń">✕</button>
-      </span>
-    </div>`).join('') : '<div class="empty">Brak użytkowników — dodaj pierwszego powyżej.</div>';
+function openStart() {
+  stopEntries(); stopAdmin();
+  Object.assign(state, { userId: null, adminId: null, asAdmin: false, unlocked: false });
+  show('start'); renderStart();
 }
-
-/* ---------- timesheet logic (per user) ---------- */
-function loadUserIntoForm(user){
-  $('contractType').value = user.settings.contractType;
-  $('rate').value = user.settings.rate;
-  $('threshold').value = user.settings.threshold;
-  $('otMult').value = user.settings.otMult;
-  $('holMult').value = user.settings.holMult;
+function requestAdmin(id) {
+  const admin = getAdmin(id); if (!admin) return;
+  requestPin(admin, () => { state.adminId = id; openAdmin(); });
+}
+function openAdmin() {
+  stopEntries();
+  const admin = getAdmin(state.adminId); if (!admin) { openStart(); return; }
+  state.userId = null; state.asAdmin = false;
+  if (!state.adminMonth) state.adminMonth = monthKey(todayStr());
+  $('adminTitle').textContent = `${greeting()}, ${admin.name}`;
+  fillMonthSelect($('adminMonth'), state.adminMonth);
+  show('admin'); subscribeAdmin(); renderAdmin();
+}
+function openTimesheet(userId, asAdmin = false) {
+  const user = getUser(userId); if (!user) return;
+  stopAdmin(); stopEntries();
+  Object.assign(state, { userId, asAdmin, unlocked: asAdmin, entries: [], month: monthKey(todayStr()) });
+  $('tsTitle').textContent = asAdmin ? user.name : `${greeting()}, ${user.name}`;
+  $('tsSub').textContent = asAdmin ? 'Podgląd administratora: wpisy, ustawienia i wypłata tej osoby.' : 'Wpisuj zmiany, a godziny i wypłatę policzymy za Ciebie.';
+  $('tsBack').textContent = asAdmin ? '← Wróć do panelu administratora' : '← Wróć do zespołu';
+  const s = settingsOf(user);
+  $('contractType').value = s.contractType; $('rate').value = s.rate; $('threshold').value = s.threshold;
+  $('otMult').value = s.otMult; $('holMult').value = s.holMult;
   toggleContractFields();
-  $('eDate').value = todayStr();
+  $('eDate').value = todayStr(); $('entryPreview').textContent = '';
+  fillMonthSelect($('monthSelect'), state.month);
+  show('timesheet'); subscribeEntries(); renderTimesheet();
 }
-function todayStr(){
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function requestUnlock() {
+  const user = getUser(state.userId); if (!user) return;
+  requestPin({ ...user, type: 'user' }, () => { state.unlocked = true; renderTimesheet(); });
 }
-function pad(n){ return String(n).padStart(2,'0'); }
 
-['contractType','rate','threshold','otMult','holMult'].forEach(id=>{
-  $(id).addEventListener('change', ()=>{
-    const user = getUser(currentUserId);
-    if(!user) return;
-    user.settings.contractType = $('contractType').value;
-    user.settings.rate = parseFloat($('rate').value)||0;
-    user.settings.threshold = parseFloat($('threshold').value)||8;
-    user.settings.otMult = parseFloat($('otMult').value)||1.5;
-    user.settings.holMult = parseFloat($('holMult').value)||2.0;
-    toggleContractFields();
-    saveAppData();
+/* ============ Subskrypcje Firestore ============ */
+function subscribeEntries() {
+  stopEntries();
+  unsub.entries = entriesCol(state.userId).where('month', '==', state.month).onSnapshot(snap => {
+    state.entries = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(byDateTime);
     renderTimesheet();
+  }, onListenError);
+}
+function subscribeAdmin() {
+  const key = state.users.map(u => u.id).join(',') + '|' + state.adminMonth;
+  if (key === unsub.adminKey) return;
+  stopAdmin(); unsub.adminKey = key; state.adminEntries = {};
+  state.users.forEach(u => {
+    unsub.admin.push(entriesCol(u.id).where('month', '==', state.adminMonth).onSnapshot(snap => {
+      state.adminEntries[u.id] = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(byDateTime);
+      renderAdmin();
+    }, onListenError));
   });
-});
-function toggleContractFields(){
-  const isEtat = $('contractType').value === 'etat';
-  $('thresholdWrap').style.display = isEtat ? '' : 'none';
-  $('otMultWrap').style.display = isEtat ? '' : 'none';
 }
-
-function timeToMinutes(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
-function computeWorkedHours(from,to,breakMin){
-  let start = timeToMinutes(from), end = timeToMinutes(to);
-  if(end <= start) end += 24*60;
-  return Math.max(0, (end - start - (breakMin||0)) / 60);
-}
-function computeEntry(entry, settings){
-  const worked = computeWorkedHours(entry.from, entry.to, entry.brk);
-  let regular = worked, overtime = 0;
-  if(settings.contractType === 'etat' && !entry.holiday){
-    regular = Math.min(worked, settings.threshold);
-    overtime = Math.max(0, worked - settings.threshold);
-  } else if(entry.holiday){
-    regular = 0; overtime = worked;
-  }
-  const rate = settings.rate || 0;
-  const otRateMult = entry.holiday ? settings.holMult : settings.otMult;
-  const pay = regular*rate + overtime*rate*otRateMult;
-  return { worked, regular, overtime, pay };
-}
-function addOneDay(dateStr){
-  let [y,m,d] = dateStr.split('-').map(Number);
-  const daysInMonth = new Date(y, m, 0).getDate();
-  d += 1;
-  if(d > daysInMonth){ d = 1; m += 1; }
-  if(m > 12){ m = 1; y += 1; }
-  return `${y}-${pad(m)}-${pad(d)}`;
-}
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function monthKey(dateStr){ return dateStr.slice(0,7); }
-function monthLabel(key){
-  const [y,m] = key.split('-');
-  const names = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
-  return `${names[parseInt(m)-1]} ${y}`;
-}
-
-$('addBtn').addEventListener('click', ()=>{
-  const user = getUser(currentUserId);
-  const date = $('eDate').value, from = $('eFrom').value, to = $('eTo').value;
-  const brk = parseInt($('eBreak').value)||0, note = $('eNote').value.trim(), holiday = $('eHoliday').checked;
-  if(!date || !from || !to){ alert('Uzupełnij datę oraz godziny od / do.'); return; }
-  user.entries.push({ id: Date.now(), date, from, to, brk, note, holiday });
-  user.entries.sort((a,b)=> a.date.localeCompare(b.date) || a.from.localeCompare(b.from));
-  $('eNote').value=''; $('eHoliday').checked=false;
-  saveAppData();
-  $('eDate').value = addOneDay(date);
-  renderTimesheet();
-});
-function deleteEntry(id){
-  const user = getUser(currentUserId);
-  user.entries = user.entries.filter(e=>e.id!==id);
-  saveAppData();
-  renderTimesheet();
-}
-window.deleteEntry = deleteEntry;
-
-function populateMonthFilter(preferLatest){
-  const user = getUser(currentUserId);
-  const months = Array.from(new Set(user.entries.map(e=>monthKey(e.date)))).sort();
-  const sel = $('monthFilter');
-  const prev = currentTsMonth;
-  sel.innerHTML = '';
-  if(months.length===0){ sel.innerHTML = '<option value="">brak wpisów</option>'; currentTsMonth = null; return; }
-  months.forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=monthLabel(m); sel.appendChild(opt); });
-  if(preferLatest) currentTsMonth = months[months.length-1];
-  else if(prev && months.includes(prev)) currentTsMonth = prev;
-  else currentTsMonth = months[months.length-1];
-  sel.value = currentTsMonth;
-}
-$('monthFilter').addEventListener('change', ()=>{ currentTsMonth = $('monthFilter').value; renderTimesheet(); });
-
-function renderEntryTable(){
-  const user = getUser(currentUserId);
-  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
-  const wrap = $('tableWrap');
-  if(rows.length===0){ wrap.innerHTML = '<div class="empty">Brak wpisów w tym miesiącu.</div>'; return; }
-  const maxHours = Math.max(...rows.map(r=>computeEntry(r,user.settings).worked), 10);
-  let html = `<table><thead><tr><th>Data</th><th>Godziny</th><th>Przerwa</th><th>Rozkład</th><th>Suma h</th><th>Kwota</th><th></th></tr></thead><tbody>`;
-  rows.forEach(e=>{
-    const c = computeEntry(e, user.settings);
-    const regW = (c.regular/maxHours*100).toFixed(1), otW = (c.overtime/maxHours*100).toFixed(1);
-    html += `<tr>
-      <td class="mono">${e.date}${e.holiday?' <span class="tag holiday">wolne/święto</span>':''}${e.note?`<br><span style="color:var(--muted);font-size:11.5px;">${escapeHtml(e.note)}</span>`:''}</td>
-      <td class="mono">${e.from}–${e.to}</td>
-      <td class="mono">${e.brk} min</td>
-      <td><div class="hourbar"><div class="seg reg" style="left:0;width:${regW}%;"></div><div class="seg ot" style="left:${regW}%;width:${otW}%;"></div></div></td>
-      <td class="mono">${c.worked.toFixed(2)} h${c.overtime>0?`<br><span class="tag" style="color:var(--amber-dark);background:#F4E3D0;">+${c.overtime.toFixed(2)} nadg.</span>`:''}</td>
-      <td class="mono">${c.pay.toFixed(2)} zł</td>
-      <td><button class="btn-danger" onclick="deleteEntry(${e.id})">Usuń</button></td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
-
-function renderSummary(){
-  const user = getUser(currentUserId);
-  const lockEl = $('summaryLock');
-  if(!summaryUnlocked){ lockEl.style.display='flex'; $('summaryGrid').innerHTML=''; $('monthBar').innerHTML=''; $('summaryNote').textContent=''; return; }
-  lockEl.style.display='none';
-  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
-  let totalWorked=0, totalRegular=0, totalOvertime=0, totalPay=0;
-  rows.forEach(e=>{ const c = computeEntry(e,user.settings); totalWorked+=c.worked; totalRegular+=c.regular; totalOvertime+=c.overtime; totalPay+=c.pay; });
-  const days = new Set(rows.map(r=>r.date)).size;
-  const avg = days ? (totalWorked/days) : 0;
-  $('summaryGrid').innerHTML = `
-    <div class="stat"><div class="label">Dni przepracowane</div><div class="value">${days}</div></div>
-    <div class="stat"><div class="label">Godziny łącznie</div><div class="value">${totalWorked.toFixed(2)} h</div></div>
-    <div class="stat"><div class="label">Godziny standardowe</div><div class="value">${totalRegular.toFixed(2)} h</div></div>
-    <div class="stat ot"><div class="label">Nadgodziny</div><div class="value">${totalOvertime.toFixed(2)} h</div></div>
-    <div class="stat"><div class="label">Śr. dzienna</div><div class="value">${avg.toFixed(2)} h</div></div>
-    <div class="stat pay"><div class="label">Wypłata brutto</div><div class="value">${totalPay.toFixed(2)} zł</div></div>
-  `;
-  const regShare = totalWorked ? (totalRegular/totalWorked*100) : 0, otShare = totalWorked ? (totalOvertime/totalWorked*100) : 0;
-  $('monthBar').innerHTML = totalWorked ? `<div class="seg" style="width:${regShare}%;background:var(--teal);">${regShare>12?'standard':''}</div><div class="seg" style="width:${otShare}%;background:var(--amber);">${otShare>10?'nadg.':''}</div>` : '';
-  $('summaryNote').textContent = user.settings.contractType==='etat'
-    ? `Umowa o pracę · próg dobowy ${user.settings.threshold} h · nadgodziny ×${user.settings.otMult}, dni wolne/święta ×${user.settings.holMult}.`
-    : `Zlecenie / dzieło / B2B · brak naliczania nadgodzin, liczona jest suma godzin × stawka.`;
-}
-
-function renderTimesheet(preferLatest){
-  populateMonthFilter(!!preferLatest);
-  renderEntryTable();
-  renderSummary();
-}
-
-function toCSV(){
-  const user = getUser(currentUserId);
-  const rows = user.entries.filter(e=> !currentTsMonth || monthKey(e.date)===currentTsMonth);
-  let csv = 'Data;Od;Do;Przerwa (min);Godziny;Standardowe;Nadgodziny;Kwota;Wolne/Swieto;Notatka\n';
-  rows.forEach(e=>{
-    const c = computeEntry(e, user.settings);
-    csv += [e.date,e.from,e.to,e.brk,c.worked.toFixed(2),c.regular.toFixed(2),c.overtime.toFixed(2),c.pay.toFixed(2),e.holiday?'tak':'nie',(e.note||'').replace(/;/g,',')].join(';') + '\n';
-  });
-  return csv;
-}
-$('exportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([toCSV()], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`ewidencja_${getUser(currentUserId).name}_${currentTsMonth||'wszystkie'}.csv`; a.click();
-  URL.revokeObjectURL(url);
-});
-$('backupExportBtn').addEventListener('click', ()=>{
-  const user = getUser(currentUserId);
-  const backup = { name:user.name, settings:user.settings, entries:user.entries, exportedAt:new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`kopia_${user.name}_${new Date().toISOString().slice(0,10)}.json`; a.click();
-  URL.revokeObjectURL(url);
-});
-$('backupImportBtn').addEventListener('click', ()=> $('backupFileInput').click());
-$('backupFileInput').addEventListener('change', (ev)=>{
-  const file = ev.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (e)=>{
-    try{
-      const data = JSON.parse(e.target.result);
-      window._pendingImport = data;
-      $('modalBox').innerHTML = `
-        <h3>Wczytać kopię zapasową?</h3>
-        <p class="note" style="margin-top:0;">To nadpisze obecne dane tego użytkownika (${data.entries ? data.entries.length : 0} wpisów w kopii).</p>
-        <div class="modal-actions">
-          <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-          <button class="btn-danger" onclick="confirmImportBackup()">Wczytaj i nadpisz</button>
-        </div>
-      `;
-      showModal();
-    }catch(err){ alert('Nie udało się wczytać pliku.'); }
+function startProfileListeners(onReady) {
+  const ready = { users: false, admins: false }; let started = false;
+  const update = kind => {
+    ready[kind] = true;
+    if (!started) { if (ready.users && ready.admins) { started = true; onReady(); } return; }
+    refreshScreen();
   };
-  reader.readAsText(file); ev.target.value='';
-});
-function confirmImportBackup(){
-  const data = window._pendingImport;
-  const user = getUser(currentUserId);
-  if(data.settings) user.settings = data.settings;
-  if(data.entries) user.entries = data.entries;
-  saveAppData();
-  loadUserIntoForm(user);
-  renderTimesheet(true);
-  closeModal();
-  alert('Kopia wczytana pomyślnie.');
+  usersCol.onSnapshot(s => { state.users = s.docs.map(d => ({ id: d.id, type: 'user', ...d.data() })).sort(byName); update('users'); }, onListenError);
+  adminsCol.onSnapshot(s => { state.admins = s.docs.map(d => ({ id: d.id, type: 'admin', ...d.data() })).sort(byName); update('admins'); }, onListenError);
+}
+function refreshScreen() {
+  if (state.screen === 'start') renderStart();
+  else if (state.screen === 'timesheet') { if (!getUser(state.userId)) openStart(); else renderTimesheet(); }
+  else if (state.screen === 'admin') { if (!getAdmin(state.adminId)) openStart(); else { subscribeAdmin(); renderAdmin(); } }
 }
 
-/* ---------- admin dashboard ---------- */
-function showAdminScreen(){
-  $('screen-start').style.display='none';
-  $('screen-timesheet').style.display='none';
-  $('screen-admin').style.display='block';
-  const admin = appData.admins.find(a=>a.id===currentAdminId);
-  $('adminTitle').textContent = admin ? admin.name : 'Administrator';
-  currentAdminMonth = null;
-  renderAdminScreen(true);
+/* ============ Widoki ============ */
+const MON = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+function renderStart() {
+  const hasAdmin = state.admins.length >= 1, btn = $('addAdminBtn');
+  btn.disabled = hasAdmin;
+  btn.textContent = hasAdmin ? 'Administrator już istnieje' : '+ Dodaj administratora';
+  const card = (type, p) => `<div class="person-card">
+    <button class="person-main" data-action="${type === 'admin' ? 'open-admin' : 'open-user'}" data-id="${esc(p.id)}">
+      ${avatarHtml(p)}<span class="pname">${esc(p.name)}</span></button>
+    <span class="person-actions">${type === 'admin' ? '' : ''}
+      <button class="icon-btn" data-action="${type === 'admin' ? 'delete-admin' : 'delete-user'}" data-id="${esc(p.id)}" aria-label="Usuń: ${esc(p.name)}">✕</button></span></div>`;
+  $('adminList').innerHTML = state.admins.length ? state.admins.map(p => card('admin', p)).join('') : '<div class="empty">Dodaj administratora, który będzie widział cały zespół.</div>';
+  $('userList').innerHTML = state.users.length ? state.users.map(p => card('user', p)).join('') : '<div class="empty">Na razie nikogo tu nie ma. Dodaj pierwszego pracownika.</div>';
 }
-function allMonthsAcrossUsers(){
-  const set = new Set();
-  appData.users.forEach(u=> u.entries.forEach(e=> set.add(monthKey(e.date))));
-  return Array.from(set).sort();
-}
-function populateAdminMonthFilter(preferLatest){
-  const months = allMonthsAcrossUsers();
-  const sel = $('adminMonthFilter');
-  const prev = currentAdminMonth;
-  sel.innerHTML = '';
-  const allOpt = document.createElement('option'); allOpt.value=''; allOpt.textContent='Wszystkie miesiące'; sel.appendChild(allOpt);
-  months.forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=monthLabel(m); sel.appendChild(opt); });
-  if(preferLatest && months.length) currentAdminMonth = months[months.length-1];
-  else if(prev!==null && (prev==='' || months.includes(prev))) currentAdminMonth = prev;
-  else currentAdminMonth = months.length ? months[months.length-1] : '';
-  sel.value = currentAdminMonth;
-}
-$('adminMonthFilter').addEventListener('change', ()=>{ currentAdminMonth = $('adminMonthFilter').value; renderAdminScreen(); });
 
-function renderAdminScreen(preferLatest){
-  populateAdminMonthFilter(!!preferLatest);
-  const wrap = $('adminTableWrap');
-  if(appData.users.length===0){ wrap.innerHTML = '<div class="empty">Brak użytkowników w systemie.</div>'; return; }
-  let html = `<table><thead><tr><th>Użytkownik</th><th>Dni</th><th>Godziny</th><th>Nadgodziny</th><th>Wypłata</th><th></th><th></th></tr></thead><tbody>`;
-  appData.users.forEach(u=>{
-    const rows = u.entries.filter(e=> !currentAdminMonth || monthKey(e.date)===currentAdminMonth);
-    let worked=0, ot=0, pay=0;
-    rows.forEach(e=>{ const c = computeEntry(e,u.settings); worked+=c.worked; ot+=c.overtime; pay+=c.pay; });
-    const days = new Set(rows.map(r=>r.date)).size;
-    html += `<tr>
-      <td class="mono">${escapeHtml(u.name)}</td>
-      <td class="mono">${days}</td>
-      <td class="mono">${worked.toFixed(2)} h</td>
-      <td class="mono">${ot.toFixed(2)} h</td>
-      <td class="mono">${pay.toFixed(2)} zł</td>
-      <td><button class="btn-ghost" onclick="selectUserFromAdmin(${u.id})">Szczegóły</button></td>
-      <td><button class="btn-ghost" onclick="openAdminResetUserPin(${u.id})">Reset PIN</button></td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
+function renderTimesheet() {
+  if (state.screen !== 'timesheet') return;
+  const user = getUser(state.userId); if (!user) return;
+  $('tsAvatar').innerHTML = avatarHtml(user, 'lg');
+  renderEntries(user); renderSummary(user);
 }
-function openAdminResetUserPin(userId){
-  const user = getUser(userId);
-  $('modalBox').innerHTML = `
-    <h3>Reset PIN — ${escapeHtml(user.name)}</h3>
-    <p class="note" style="margin-top:0;">Jako administrator możesz ustawić nowy PIN bez podawania pytania pomocniczego.</p>
-    <div class="field"><label>Nowy 4-cyfrowy PIN</label>
-      <div class="pin-display">
-        <input type="tel" maxlength="1" class="pin-d" data-i="0"><input type="tel" maxlength="1" class="pin-d" data-i="1">
-        <input type="tel" maxlength="1" class="pin-d" data-i="2"><input type="tel" maxlength="1" class="pin-d" data-i="3">
+
+function renderEntries(user) {
+  const s = settingsOf(user), rows = state.entries, pay = state.unlocked, box = $('entriesBox');
+  if (!rows.length) { box.innerHTML = '<div class="empty">Pusto jak w lodówce po zmianie. Dodaj pierwszy wpis powyżej.</div>'; return; }
+  const calcs = rows.map(e => computeEntry(e, s)), t = totals(rows, s);
+  const maxMin = Math.max(...calcs.map(c => c.w), 600);
+  const plural = n => n === 1 ? 'wpis' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'wpisy' : 'wpisów';
+  const rowsHtml = rows.map((e, i) => {
+    const c = calcs[i], reg = (c.reg / maxMin * 100).toFixed(1), extra = ((c.ot + c.hol) / maxMin * 100).toFixed(1);
+    return `<div class="erow">
+      <div class="e-date"><b>${esc(e.date.slice(8, 10))}</b><span>${weekday(e.date)} · ${MON[+e.date.slice(5, 7) - 1]}</span></div>
+      <div class="e-main">
+        <div class="e-time">${esc(e.from)}–${esc(e.to)}<span class="muted">przerwa ${e.brk || 0} min</span>${c.night ? '<span class="tag night">nocna</span>' : ''}${e.holiday ? '<span class="tag">wolne/święto</span>' : ''}${c.ot > 0 ? `<span class="tag">+${hm(c.ot)} nadg.</span>` : ''}</div>
+        <div class="hourbar"><div class="seg reg" style="left:0;width:${reg}%"></div><div class="seg ot" style="left:${reg}%;width:${extra}%"></div></div>
+        ${e.note ? `<div class="e-note">${esc(e.note)}</div>` : ''}
       </div>
-    </div>
-    <p class="modal-error" id="arErr"></p>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Anuluj</button>
-      <button class="btn-primary" onclick="confirmAdminResetUserPin(${userId})">Ustaw PIN</button>
-    </div>
-  `;
-  setupPinAutoAdvance();
-  showModal();
-}
-function confirmAdminResetUserPin(userId){
-  const pin = getPinValue();
-  if(pin.length!==4){ $('arErr').textContent='PIN musi mieć 4 cyfry.'; $('arErr').style.display='block'; return; }
-  const user = getUser(userId);
-  user.pinHash = simpleHash(pin);
-  saveAppData();
-  closeModal();
-  alert(`Nowy PIN dla ${user.name} został ustawiony.`);
+      <div class="e-dur"><b class="num">${hm(c.w)}</b><span class="num">${dec(c.w)} h</span></div>
+      <div class="e-pay num">${pay ? zl(c.cents) : ''}</div>
+      <button class="btn-danger e-del" data-action="delete-entry" data-id="${esc(e.id)}" aria-label="Usuń wpis z ${esc(e.date)}">Usuń</button>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="elist">${rowsHtml}
+    <div class="erow total"><div class="e-date"><b>Σ</b><span>razem</span></div>
+      <div class="e-main"><div class="e-time">${rows.length} ${plural(rows.length)} w tym miesiącu</div></div>
+      <div class="e-dur"><b class="num">${hm(t.w)}</b><span class="num">${dec(t.w)} h</span></div>
+      <div class="e-pay num">${pay ? zl(t.cents) : ''}</div><span></span></div></div>`;
 }
 
-/* ---------- init ---------- */
-$('adminBackBtn').addEventListener('click', backToStart);
-loadAppData();
+function renderSummary(user) {
+  const box = $('summaryBox');
+  $('summaryLock').hidden = state.unlocked;
+  if (!state.unlocked) { box.innerHTML = ''; return; }
+  const s = settingsOf(user), t = totals(state.entries, s);
+  if (!t.w) { box.innerHTML = '<div class="empty">Brak wpisów w tym miesiącu.</div>'; return; }
+  const avg = Math.round(t.w / t.days);
+  const tile = (cls, label, min) => `<div class="stat ${cls}"><div class="label">${label}</div><div class="value">${hm(min)}</div><div class="dec">${dec(min)} h</div></div>`;
+  const regPct = t.reg / t.w * 100, extraPct = t.extra / t.w * 100;
+  box.innerHTML = `<div class="summary-grid">
+      <div class="hero"><svg class="hero-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#av-sandwich"/></svg>
+        <div><div class="label">Czas pracy łącznie</div><div class="hero-time">${hm(t.w)}</div><div class="hero-sub">${dec(t.w)} h · ${t.w} min</div></div>
+        <div class="hero-pay"><div class="label">Wypłata brutto</div><div class="hero-money">${zl(t.cents)}</div><div class="hero-sub">stawka ${num(s.rate)} zł/h</div></div>
+      </div>
+      <div class="stat"><div class="label">Dni na zmianie</div><div class="value">${t.days}</div></div>
+      ${tile('', 'Godziny standardowe', t.reg)}${tile('ot', 'Nadgodziny / święta', t.extra)}${tile('', 'Średnio dziennie', avg)}
+    </div>
+    <div class="month-bar" role="img" aria-label="Godziny standardowe ${Math.round(regPct)}%, nadgodziny ${Math.round(extraPct)}%">
+      <div class="seg" style="width:${regPct}%;background:var(--teal)">${regPct > 12 ? 'standard' : ''}</div>
+      <div class="seg" style="width:${extraPct}%;background:var(--amber)">${extraPct > 10 ? 'nadg.' : ''}</div></div>
+    <p class="note">${s.contractType === 'etat'
+      ? `Umowa o pracę · próg dobowy ${num(s.threshold)} h · nadgodziny ×${num(s.otMult)}, dni wolne/święta ×${num(s.holMult)}.`
+      : `Zlecenie / dzieło / B2B · brak naliczania nadgodzin, liczona jest suma godzin × stawka.`}</p>`;
+}
+
+function renderAdmin() {
+  if (state.screen !== 'admin') return;
+  const adm = getAdmin(state.adminId); if (adm) $('adminAvatar').innerHTML = avatarHtml(adm, 'lg');
+  const box = $('adminBox');
+  if (!state.users.length) { box.innerHTML = '<div class="empty">W zespole nie ma jeszcze pracowników.</div>'; return; }
+  const all = { w: 0, extra: 0, cents: 0, days: 0 };
+  const cell = (label, main, sub, cls) => `<div><span class="u-l">${label}</span><div class="u-v num ${cls || ''}">${main}</div>${sub ? `<div class="u-d num">${sub}</div>` : ''}</div>`;
+  const rows = state.users.map(u => {
+    const t = totals(state.adminEntries[u.id] || [], settingsOf(u));
+    all.w += t.w; all.extra += t.extra; all.cents += t.cents; all.days += t.days;
+    return `<div class="urow">
+      <div class="u-name">${avatarHtml(u)}${esc(u.name)}</div>
+      ${cell('Dni', t.days)}${cell('Czas pracy', hm(t.w), dec(t.w) + ' h')}${cell('Nadgodziny / święta', hm(t.extra), dec(t.extra) + ' h')}${cell('Wypłata', zl(t.cents), '', 'u-pay')}
+      <div class="u-actions"><button class="btn-ghost" data-action="details" data-id="${esc(u.id)}">Szczegóły</button><button class="btn-ghost" data-action="reset-pin" data-id="${esc(u.id)}">Reset PIN</button></div></div>`;
+  }).join('');
+  box.innerHTML = rows + `<div class="urow total"><div class="u-name">Razem</div>${cell('Dni', all.days)}${cell('Czas pracy', hm(all.w), dec(all.w) + ' h')}${cell('Nadgodziny / święta', hm(all.extra), dec(all.extra) + ' h')}${cell('Do wypłaty', zl(all.cents), '', 'u-pay')}<div></div></div>`;
+}
+
+/* ============ Formularze karty czasu pracy ============ */
+const toggleContractFields = () => document.querySelectorAll('[data-etat]').forEach(el => { el.hidden = $('contractType').value !== 'etat'; });
+
+$('settingsForm').addEventListener('change', async () => {
+  const user = getUser(state.userId); if (!user) return;
+  const settings = {
+    contractType: $('contractType').value,
+    rate: parseFloat($('rate').value) || 0,
+    threshold: parseFloat($('threshold').value) || 8,
+    otMult: parseFloat($('otMult').value) || 1.5,
+    holMult: parseFloat($('holMult').value) || 2
+  };
+  toggleContractFields();
+  user.settings = settings; renderTimesheet();                       // natychmiastowy podgląd
+  await save(usersCol.doc(user.id).update({ settings }));
+});
+
+function updateEntryPreview() {
+  const from = $('eFrom').value, to = $('eTo').value;
+  if (!from || !to) { $('entryPreview').textContent = ''; return; }
+  const start = toMinutes(from); let end = toMinutes(to);
+  const night = end <= start; if (night) end += 1440;
+  const w = Math.max(0, end - start - (parseInt($('eBreak').value) || 0));
+  $('entryPreview').textContent = `Ten wpis: ${hm(w)} (${dec(w)} h)${night ? ' · zmiana nocna' : ''}`;
+}
+['eFrom', 'eTo', 'eBreak'].forEach(id => $(id).addEventListener('input', updateEntryPreview));
+
+$('entryForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const date = $('eDate').value;
+  const entry = {
+    date, from: $('eFrom').value, to: $('eTo').value,
+    brk: Math.max(0, parseInt($('eBreak').value) || 0),
+    note: $('eNote').value.trim(), holiday: $('eHoliday').checked, month: monthKey(date)
+  };
+  if (!await save(entriesCol(state.userId).add(entry))) return;
+  toast(`Wpis dodany: ${hm(computeEntry(entry, settingsOf(getUser(state.userId))).w)}. Dobra robota!`);
+  $('eNote').value = ''; $('eHoliday').checked = false; $('eDate').value = addOneDay(date);
+  if (entry.month !== state.month) { state.month = entry.month; fillMonthSelect($('monthSelect'), state.month); subscribeEntries(); }
+});
+
+$('monthSelect').addEventListener('change', () => { state.month = $('monthSelect').value; state.entries = []; subscribeEntries(); renderTimesheet(); });
+$('adminMonth').addEventListener('change', () => { state.adminMonth = $('adminMonth').value; subscribeAdmin(); renderAdmin(); });
+$('tsBack').addEventListener('click', () => (state.asAdmin ? openAdmin() : openStart()));
+$('adminBack').addEventListener('click', openStart);
+$('tsAvatar').addEventListener('click', () => openAvatarPicker(getUser(state.userId)));
+$('adminAvatar').addEventListener('click', () => openAvatarPicker(getAdmin(state.adminId)));
+
+/* ============ CSV i kopia zapasowa ============ */
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+$('csvBtn').addEventListener('click', () => {
+  const user = getUser(state.userId); if (!user) return;
+  const s = settingsOf(user), pay = state.unlocked;
+  let csv = '\uFEFFData;Od;Do;Przerwa (min);Czas (h min);Minuty;Godziny dziesietne;Nadgodziny (min);Wolne/Swieto;' + (pay ? 'Kwota (zl);' : '') + 'Notatka\n';
+  for (const e of state.entries) {
+    const c = computeEntry(e, s);
+    csv += [e.date, e.from, e.to, e.brk || 0, hm(c.w), c.w, dec(c.w), c.ot + c.hol, e.holiday ? 'tak' : 'nie',
+      ...(pay ? [(c.cents / 100).toFixed(2).replace('.', ',')] : []), (e.note || '').replace(/;/g, ',')].join(';') + '\n';
+  }
+  download(`ewidencja_${user.name}_${state.month}.csv`, csv, 'text/csv;charset=utf-8;');
+});
+
+$('backupExportBtn').addEventListener('click', async () => {
+  const user = getUser(state.userId); if (!user) return;
+  try {
+    const snap = await entriesCol(user.id).get();
+    const entries = snap.docs.map(d => { const { month, ...rest } = d.data(); return rest; }).sort(byDateTime);
+    download(`ewidencja_kopia_${user.name}_${todayStr()}.json`,
+      JSON.stringify({ version: 2, name: user.name, settings: settingsOf(user), entries, exportedAt: new Date().toISOString() }, null, 2), 'application/json');
+  } catch (e) { console.error(e); toast('Nie udało się pobrać danych do kopii.'); }
+});
+$('backupImportBtn').addEventListener('click', () => $('backupFile').click());
+$('backupFile').addEventListener('change', async ev => {
+  const file = ev.target.files[0]; ev.target.value = '';
+  const user = getUser(state.userId); if (!file || !user) return;
+  let data;
+  try { data = JSON.parse(await file.text()); if (!Array.isArray(data.entries)) throw new Error('format'); }
+  catch (e) { toast('To nie jest poprawna kopia zapasowa (.json).'); return; }
+  const valid = data.entries.filter(e => /^\d{4}-\d{2}-\d{2}$/.test(e.date) && /^\d{2}:\d{2}$/.test(e.from) && /^\d{2}:\d{2}$/.test(e.to));
+  confirmModal('Wczytać kopię zapasową?', `Wpisy tego użytkownika (${valid.length} w pliku) zastąpią obecne dane.`, 'Wczytaj kopię', async () => {
+    try {
+      const old = await entriesCol(user.id).get();
+      const ops = old.docs.map(d => b => b.delete(d.ref));
+      valid.forEach(e => ops.push(b => b.set(entriesCol(user.id).doc(), {
+        date: e.date, from: e.from, to: e.to, brk: Math.max(0, parseInt(e.brk) || 0),
+        note: String(e.note || ''), holiday: !!e.holiday, month: monthKey(e.date)
+      })));
+      if (data.settings) { const s = { ...defaultSettings(), ...data.settings }; ops.push(b => b.update(usersCol.doc(user.id), { settings: s })); }
+      await commitOps(ops);
+      toast('Kopia została wczytana.');
+    } catch (e) { console.error(e); toast('Nie udało się wczytać kopii.'); }
+  });
+});
+
+/* ============ Obsługa kliknięć (delegacja zdarzeń) ============ */
+const actions = {
+  'add-person':   (id, el) => openAddPerson(el.dataset.type),
+  'open-user':    id => openTimesheet(id),
+  'open-admin':   id => requestAdmin(id),
+  'delete-user':  id => requestDeleteUser(id),
+  'delete-admin': id => requestDeleteAdmin(id),
+  'delete-entry': id => confirmModal('Usunąć wpis?', 'Tej operacji nie można cofnąć.', 'Usuń wpis', () => save(entriesCol(state.userId).doc(id).delete())),
+  'unlock':       requestUnlock,
+  'details':      id => openTimesheet(id, true),
+  'reset-pin':    id => openAdminResetPin(id)
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (el && !el.disabled) actions[el.dataset.action]?.(el.dataset.id, el);
+});
+
+/* ============ Migracja ze starej struktury (dokument app/data) ============ */
+async function migrateLegacy() {
+  const [u, a] = await Promise.all([usersCol.limit(1).get(), adminsCol.limit(1).get()]);
+  if (!u.empty || !a.empty) return;
+  const legacy = await db.collection('app').doc('data').get();
+  if (!legacy.exists) return;
+  const d = legacy.data(), ops = [];
+  const profile = p => {
+    const out = { name: p.name || '', question: p.question || '', pinHash: p.pinHash || '', answerHash: p.answerHash || '' };
+    if (p.settings) out.settings = { ...defaultSettings(), ...p.settings };
+    return out;
+  };
+  (d.admins || []).forEach(p => ops.push(b => b.set(adminsCol.doc(String(p.id)), profile(p))));
+  (d.users || []).forEach(p => {
+    const uid = String(p.id);
+    ops.push(b => b.set(usersCol.doc(uid), profile(p)));
+    (p.entries || []).forEach(e => ops.push(b => b.set(entriesCol(uid).doc(String(e.id)), {
+      date: e.date, from: e.from, to: e.to, brk: e.brk || 0, note: e.note || '', holiday: !!e.holiday, month: e.date.slice(0, 7)
+    })));
+  });
+  await commitOps(ops);
+}
+
+/* ============ Start ============ */
+(async function init() {
+  try { await migrateLegacy(); } catch (e) { console.error('Migracja pominięta:', e); }
+  startProfileListeners(openStart);
+})();
 </script>
 </body>
 </html>
